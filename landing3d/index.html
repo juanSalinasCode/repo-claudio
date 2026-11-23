@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Recorridos 3D de propiedades</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400&display=swap">
+<style>
+/* Layout: cabecera con propuesta de valor + grilla de visores 3D que se cargan al tocar */
+:root{
+  --bg:#f5f4f1; --surface:#ffffff; --fg:#1c1d20; --muted:#5d6169; --line:#e2e0da;
+  --accent:#c2541b; --accent-fg:#ffffff; --stage:#16181c;
+  --display:"Fraunces", Georgia, "Times New Roman", serif;
+  --body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --mono:"JetBrains Mono", ui-monospace, Menlo, Consolas, monospace;
+  color-scheme:light;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121315; --surface:#1b1d20; --fg:#ecebe7; --muted:#a3a6ad; --line:#2c2f34;
+  --accent:#e0743a; --accent-fg:#16181c; --stage:#0b0c0e; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121315; --surface:#1b1d20; --fg:#ecebe7; --muted:#a3a6ad; --line:#2c2f34;
+  --accent:#e0743a; --accent-fg:#16181c; --stage:#0b0c0e; color-scheme:dark}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.6 var(--body)}
+.wrap{max-width:1180px;margin:0 auto;padding-block:48px 64px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header{display:grid;gap:16px;margin-bottom:40px;max-width:760px}
+.eyebrow{font:12px/1 var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--accent)}
+h1{font:700 clamp(2rem,5vw,3.4rem)/1.08 var(--display);margin:0;text-wrap:balance}
+.lead{color:var(--muted);font-size:1.08rem;margin:0;max-width:62ch}
+.steps{display:flex;flex-wrap:wrap;gap:8px 20px;margin:8px 0 0;padding:0;list-style:none;font:13px/1.4 var(--mono);color:var(--muted)}
+.steps li::before{content:"→ ";color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,520px),1fr));gap:28px}
+.card{display:grid;gap:12px;min-width:0}
+.stage{position:relative;aspect-ratio:16/10;max-width:100%;background:var(--stage);border-radius:6px;overflow:hidden}
+.stage iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.load{position:absolute;inset:0;display:grid;place-content:center;gap:10px;text-align:center;
+  background:radial-gradient(120% 90% at 50% 100%,#2a2d33 0%,var(--stage) 70%);color:#ecebe7;border:0;cursor:pointer;font:inherit;width:100%}
+.load .play{justify-self:center;display:grid;place-items:center;width:64px;height:64px;border-radius:50%;background:var(--accent);color:var(--accent-fg);font-size:22px;transition:transform .2s}
+.load:hover .play,.load:focus-visible .play{transform:scale(1.08)}
+.load:focus-visible{outline:3px solid var(--accent);outline-offset:-3px}
+.load small{font:12px var(--mono);color:#a3a6ad;letter-spacing:.04em}
+.meta{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+h2{font:500 1.25rem/1.25 var(--display);margin:0}
+.tag{font:11px/1 var(--mono);text-transform:uppercase;letter-spacing:.1em;padding:5px 8px;border:1px solid var(--line);border-radius:3px;color:var(--muted);white-space:nowrap}
+.card p{margin:0;color:var(--muted);font-size:.95rem}
+.card a{color:var(--accent);font-size:.9rem;text-underline-offset:3px}
+footer{margin-top:56px;padding-top:20px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem;max-width:80ch}
+@media (prefers-reduced-motion:reduce){.load .play{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="eyebrow">Recorridos 3D · Propiedades</span>
+    <h1>Tu propiedad, recorrible en 3D desde cualquier pantalla</h1>
+    <p class="lead">Filmamos la casa con el celular o un dron y la convertimos en un modelo 3D que el comprador recorre por dentro y por fuera, desde el navegador, sin instalar nada. Estos son ejemplos de referencia del tipo de resultado.</p>
+    <ul class="steps"><li>Video de la propiedad</li><li>Reconstrucción 3D</li><li>Página web con el recorrido</li></ul>
+  </header>
+
+  <main class="grid" id="grid"></main>
+
+  <footer>
+    Los modelos mostrados son ejemplos públicos de terceros, embebidos con los visores oficiales de cada plataforma (Sketchfab, SuperSplat, Matterport, Varjo Teleport). Pertenecen a sus autores y se muestran solo como referencia del tipo de trabajo. Tocá cada visor para cargarlo; en celular conviene abrirlos de a uno.
+  </footer>
+</div>
+
+<script>
+const MODELS = [
+  {
+    title: "Casa familiar escaneada",
+    tag: "Fotogrametría",
+    text: "Escaneo de alta calidad de una casa real y su entorno, pensado para inmobiliarias.",
+    embed: "https://sketchfab.com/models/e566617c17ac4efe8fc163e7762d5789/embed?autostart=1&ui_theme=dark&ui_hint=2",
+    page: "https://sketchfab.com/3d-models/our-house-high-quality-real-estate-scan-e566617c17ac4efe8fc163e7762d5789"
+  },
+  {
+    title: "Casa con interior",
+    tag: "Interior + exterior",
+    text: "Vivienda estilo americano con el interior incluido: se puede entrar y recorrer los ambientes.",
+    embed: "https://sketchfab.com/models/5a9e087fbd3a4ae79b4c51d6279f0466/embed?autostart=1&ui_theme=dark&ui_hint=2",
+    page: "https://sketchfab.com/3d-models/american-vintage-house-with-interior-5a9e087fbd3a4ae79b4c51d6279f0466"
+  },
+  {
+    title: "Propiedad: exterior, interior y vista aérea",
+    tag: "Dron + interior",
+    text: "Captura que combina vuelo de dron con tomas interiores en un solo modelo.",
+    embed: "https://sketchfab.com/models/ab4cb3b8bb69421a95d14276e1413930/embed?autostart=1&ui_theme=dark&ui_hint=2",
+    page: "https://sketchfab.com/models/ab4cb3b8bb69421a95d14276e1413930"
+  },
+  {
+    title: "Adams House",
+    tag: "Fotogrametría",
+    text: "Casa completa reconstruida a partir de fotos, con textura fotográfica real.",
+    embed: "https://sketchfab.com/models/3ea717af6c604096a6362d6df7d13289/embed?autostart=1&ui_theme=dark&ui_hint=2",
+    page: "https://sketchfab.com/3d-models/adams-house-3ea717af6c604096a6362d6df7d13289"
+  },
+  {
+    title: "Casa en Gaussian Splatting",
+    tag: "Gaussian Splatting",
+    text: "La técnica más nueva: aspecto fotorrealista, reflejos y vegetación incluidos. Se mueve con el dedo o el mouse.",
+    embed: "https://superspl.at/s?id=91c1e47e",
+    page: "https://superspl.at/scene/91c1e47e"
+  },
+  {
+    title: "Tour estilo Matterport",
+    tag: "Tour virtual",
+    text: "El formato clásico de tour inmobiliario: caminar de punto en punto, plano y vista de maqueta.",
+    embed: "https://my.matterport.com/show/?m=SxQL3iGyoDo&play=1&qs=1",
+    page: "https://my.matterport.com/show/?m=SxQL3iGyoDo"
+  },
+  {
+    title: "Captura con celular (Varjo Teleport)",
+    tag: "Gaussian Splatting",
+    text: "Escena capturada con un iPhone y procesada en la nube; se comparte con un enlace o se ve en VR.",
+    embed: "https://teleport.varjo.com/share/10e2f525850d4a2da3649eeff8a2682d",
+    page: "https://teleport.varjo.com/share/10e2f525850d4a2da3649eeff8a2682d"
+  }
+];
+
+const grid = document.getElementById("grid");
+for (const m of MODELS) {
+  const card = document.createElement("article");
+  card.className = "card";
+  card.innerHTML = `
+    <div class="stage">
+      <button class="load" type="button" aria-label="Cargar visor 3D: ${m.title}">
+        <span class="play" aria-hidden="true">▶</span>
+        <span>Ver en 3D</span>
+        <small>${new URL(m.embed).hostname}</small>
+      </button>
+    </div>
+    <div class="meta"><h2>${m.title}</h2><span class="tag">${m.tag}</span></div>
+    <p>${m.text}</p>
+    <a href="${m.page}" target="_blank" rel="noopener">Abrir en pantalla completa ↗</a>`;
+  card.querySelector(".load").addEventListener("click", (e) => {
+    const f = document.createElement("iframe");
+    f.src = m.embed;
+    f.title = m.title;
+    f.allow = "autoplay; fullscreen; xr-spatial-tracking; gyroscope; accelerometer";
+    f.allowFullscreen = true;
+    e.currentTarget.replaceWith(f);
+  });
+  grid.appendChild(card);
+}
+</script>
+</body>
+</html>
