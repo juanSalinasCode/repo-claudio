@@ -91,16 +91,17 @@ BWIN = next(((i, w) for i, w in enumerate(RIGHT_WINS) if BY < (w[0] + w[1]) / 2 
 old = bpy.data.objects.get("Riel granero")
 if old:
     bpy.data.objects.remove(old)
-DW = (BD[1] - BD[0]) + 0.10                 # en f0110 la hoja cerrada deja ver la jamba derecha:
-DX0 = BD[0] - 0.10                          # solapa sólo del lado izquierdo (hacia donde abre)
+DX0 = BD[0] - 0.06                          # en f0110 la hoja cerrada deja ver la jamba derecha:
+DW = BD[1] - DX0                            # solapa sólo del lado izquierdo (hacia donde abre)
 DZ1 = LOFT_Z - 0.11                         # borde superior de la hoja
 RZ0, RZ1 = LOFT_Z - 0.075, LOFT_Z - 0.035   # riel (planchuela 4 cm)
 RY0, RY1 = VIGA_Y - 0.012, VIGA_Y           # riel atornillado a la cenefa
-DY1 = RY0 - 0.025                           # cara trasera de la hoja
+DY1 = RY0 - 0.006                           # cara trasera de la hoja (lo más pegada posible al tabique:
+                                            # delante quedan el sillón y las sillas colgadas)
 DY0 = DY1 - 0.038                           # hoja 38 mm
-box("Riel granero", BD[0] - DW - 0.12, BD[1] + 0.30, RY0, RY1, RZ0, RZ1, M["blackmetal"])
-for k, x in enumerate((BD[0] - DW - 0.08, BD[0] - 0.40 + 0.0 * DW, BD[1] + 0.26)):
-    box(f"Soporte riel {k}", x - 0.015, x + 0.015, RY0 - 0.01, RY1, RZ0 - 0.005, RZ1 + 0.005, M["blackmetal"])
+box("Riel granero", XL + 0.005, BD[1] + 0.30, RY0, RY1, RZ0, RZ1, M["blackmetal"])
+for k, x in enumerate((XL + 0.06, BD[0] - 0.20, BD[1] + 0.24)):     # bulones (cabeza delante del riel, bajo las ruedas)
+    cyl(f"Soporte riel {k}", x, RY0 - 0.0035, RZ0 + 0.005, RZ0 + 0.020, 0.0075, M["blackmetal"], verts=8)
 bm = bmesh.new(); pv = (DX0, DY0, 0.0)
 NB = 3
 for k in range(NB):
@@ -113,12 +114,19 @@ add_box(bm, DX0 + 0.05, DX0 + 0.07, DY0 - 0.035, DY0, 0.90, 1.20, pivot=pv, mi=1
 add_box(bm, DX0 + DW - 0.07, DX0 + DW - 0.05, DY0 - 0.035, DY0, 0.90, 1.20, pivot=pv, mi=1)
 bm.normal_update()
 gran = make_obj("Puerta granero", bm, [M_door, M["blackmetal"]], pv)
-interactive(gran, "slide", "Puerta corrediza del baño", vec=(-(BD[1] - BD[0]) - 0.04, 0, 0))
-box("Guia piso granero", BD[0] - 0.12, BD[0] - 0.08, DY0 - 0.02, PF, 0.0, 0.03, M["blackmetal"])
-# contramarco de pino del vano (se ve en f0132)
-multi("Marco puerta baño", [(BD[0] - 0.05, BD[0], PF - 0.015, BY, 0, BD[3] + 0.05, 0),
-                            (BD[1], BD[1] + 0.05, PF - 0.015, BY, 0, BD[3] + 0.05, 0),
-                            (BD[0] - 0.05, BD[1] + 0.05, PF - 0.015, BY, BD[3], BD[3] + 0.05, 0)], [M["pine"]])
+# abre hacia −x hasta 1,5 cm de la pared XL (el hueco queda libre ≈55 cm: la pared no deja correrla más)
+interactive(gran, "slide", "Puerta corrediza del baño", vec=(-(DX0 - (XL + 0.015)), 0, 0))
+box("Guia piso granero", BD[0] + 0.0, BD[0] + 0.03, DY0 - 0.016, DY0 - 0.003, 0.0, 0.05, M["blackmetal"])
+# contramarco de pino: jambas y dintel forrando el hueco + tapajuntas en ambas caras (envuelve el hueco
+# sin atravesar el tabique; 1 mm de luz con el tabique)
+CW, CT, e = 0.05, 0.015, 0.001
+_mp = [(BD[0] + e, BD[0] + e + CT, PF + e, BY - e, 0, BD[3] - e, 0),
+       (BD[1] - e - CT, BD[1] - e, PF + e, BY - e, 0, BD[3] - e, 0),
+       (BD[0] + e, BD[1] - e, PF + e, BY - e, BD[3] - e - CT, BD[3] - e, 0)]
+for ya, yb in ((PF - e - CT, PF - e), (BY + e, BY + e + CT)):
+    _mp += [(BD[0] - CW, BD[0] + e + CT, ya, yb, 0, BD[3] + CW, 0), (BD[1] - e - CT, BD[1] + CW, ya, yb, 0, BD[3] + CW, 0),
+            (BD[0] + e + CT, BD[1] - e - CT, ya, yb, BD[3] - e - CT, BD[3] + CW, 0)]
+multi("Marco puerta baño", _mp, [M["pine"]])
 
 # =================================================================== DUCHA NEO-ANGULAR (esquina XL, L)
 SD = min(0.92, DEPTH - 0.62)     # lado del plato sobre cada pared
@@ -130,28 +138,43 @@ P_C = (XL + SD, L - SR)          # lado manija
 P_D = (XL + SD, L)               # sobre la pared del fondo
 poly_z("Plato ducha", [(XL, L), P_A, P_B, P_C, P_D], 0.0, SZ0, M_shbase)
 cyl("Rejilla ducha", XL + SD * 0.45, L - SD * 0.45, SZ0, SZ0 + 0.002, 0.04, M_chrome, verts=12)
+# Vidrios fijos y perfiles a tope: cada perfil está en el BORDE del vidrio (arriba, abajo, contra la pared y
+# en el parante de la bisagra/manija), con 1 mm de luz; ningún perfil cruza un vidrio.
+PE, PT, PW = 0.022, 0.025, 0.02          # perfil: alto de los horizontales, ancho de los verticales, espesor
+def _sub(p, q, s0, s1):
+    ln = math.hypot(q[0] - p[0], q[1] - p[1]); ux_, uy_ = (q[0] - p[0]) / ln, (q[1] - p[1]) / ln
+    return (p[0] + ux_ * s0, p[1] + uy_ * s0), (p[0] + ux_ * (ln - s1), p[1] + uy_ * (ln - s1))
 bm = bmesh.new()
-seg_box(bm, P_A, P_B, 0.008, SZ0 + 0.02, SZ1 - 0.02)
-seg_box(bm, P_C, P_D, 0.008, SZ0 + 0.02, SZ1 - 0.02)
+a_, b_ = _sub(P_A, P_B, 0.002 + PT + 0.001, 0.016 + 0.001)       # de la pared XL al parante de la bisagra
+seg_box(bm, a_, b_, 0.008, SZ0 + 0.001 + PE + 0.001, SZ1 - PE - 0.001)
+a_, b_ = _sub(P_C, P_D, 0.016 + 0.001, 0.002 + PT + 0.001)       # del parante de la manija a la pared del fondo
+seg_box(bm, a_, b_, 0.008, SZ0 + 0.001 + PE + 0.001, SZ1 - PE - 0.001)
 bm.normal_update()
 make_obj("Ducha vidrio fijo", bm, [M["glass"]])
 bm = bmesh.new()
-for p, q in ((P_A, P_B), (P_B, P_C), (P_C, P_D)):
-    seg_box(bm, p, q, 0.03, SZ1 - 0.025, SZ1)          # perfil superior
-    seg_box(bm, p, q, 0.03, SZ0, SZ0 + 0.02)           # perfil inferior
-for p in (P_A, P_B, P_C, P_D):                         # parantes
-    add_box(bm, p[0] - 0.015, p[0] + 0.015, p[1] - 0.015, p[1] + 0.015, SZ0, SZ1)
+for p, q, s0, s1 in ((P_A, P_B, 0.002 + PT + 0.001, 0.016), (P_C, P_D, 0.016, 0.002 + PT + 0.001)):
+    a_, b_ = _sub(p, q, s0, s1)
+    seg_box(bm, a_, b_, PW, SZ1 - PE, SZ1)                    # perfil superior (sobre el vidrio)
+    seg_box(bm, a_, b_, PW, SZ0 + 0.001, SZ0 + 0.001 + PE)    # perfil inferior (bajo el vidrio)
+seg_box(bm, P_B, P_C, PW, SZ1 - PE, SZ1, inset=0.016)         # dintel sobre la puerta
+for p, q in ((P_A, P_B), (P_D, P_C)):                         # perfiles de pared (U) en el canto del vidrio
+    a_, b_ = _sub(p, q, 0.002, 0.0)
+    seg_box(bm, a_, (a_[0] + (b_[0] - a_[0]) * PT / math.dist(a_, b_), a_[1] + (b_[1] - a_[1]) * PT / math.dist(a_, b_)),
+            PW, SZ0 + 0.001, SZ1)
+for p in (P_B, P_C):                                          # parantes bisagra / manija
+    add_box(bm, p[0] - 0.015, p[0] + 0.015, p[1] - 0.015, p[1] + 0.015, SZ0 + 0.001, SZ1)
 bm.normal_update()
 make_obj("Ducha perfiles", bm, [M_chrome])
 # puerta: toda la cara a 45°, bisagra en P_B, abre hacia afuera (giro −Z)
 bm = bmesh.new(); pv = (P_B[0], P_B[1], SZ0)
-seg_box(bm, P_B, P_C, 0.008, SZ0 + 0.03, SZ1 - 0.03, pivot=pv, inset=0.025)
+# vidrio enmarcado a tope por 4 perfiles (no lo cruzan)
+seg_box(bm, P_B, P_C, 0.008, SZ0 + 0.056, SZ1 - 0.056, pivot=pv, inset=0.046)
 for zz in ((SZ0 + 0.03, SZ0 + 0.055), (SZ1 - 0.055, SZ1 - 0.03)):
     seg_box(bm, P_B, P_C, 0.022, *zz, pivot=pv, mi=1, inset=0.025)
 dl = math.hypot(P_C[0] - P_B[0], P_C[1] - P_B[1])
 ux, uy = (P_C[0] - P_B[0]) / dl, (P_C[1] - P_B[1]) / dl
 for s0, s1 in ((0.025, 0.045), (dl - 0.045, dl - 0.025)):
-    seg_box(bm, (P_B[0] + ux * s0, P_B[1] + uy * s0), (P_B[0] + ux * s1, P_B[1] + uy * s1), 0.022, SZ0 + 0.03, SZ1 - 0.03, pivot=pv, mi=1)
+    seg_box(bm, (P_B[0] + ux * s0, P_B[1] + uy * s0), (P_B[0] + ux * s1, P_B[1] + uy * s1), 0.022, SZ0 + 0.056, SZ1 - 0.056, pivot=pv, mi=1)
 hx, hy = P_B[0] + ux * (dl - 0.07), P_B[1] + uy * (dl - 0.07)
 add_box(bm, hx - 0.02, hx + 0.02, hy - 0.02, hy + 0.02, 1.00, 1.04, pivot=pv, mi=1)      # pomo cromado
 bm.normal_update()
@@ -168,7 +191,7 @@ multi("Canasto ducha", [(XL + 0.04, XL + 0.05, SYC - 0.13, SYC + 0.13, 1.30, 1.8
       [(XL + 0.05, XL + 0.16, SYC - 0.13, SYC + 0.13, z, z + 0.015, 0) for z in (1.35, 1.58)] +
       [(XL + 0.15, XL + 0.16, SYC - 0.13, SYC + 0.13, z, z + 0.07, 0) for z in (1.35, 1.58)], [M["blackmetal"]])
 for k in range(3):
-    cyl(f"Frasco ducha {k}", XL + 0.10, SYC - 0.07 + k * 0.07, 1.365, 1.50, 0.025, (M["white"], M_tw1, M["copper"])[k], verts=8)
+    cyl(f"Frasco ducha {k}", XL + 0.10, SYC - 0.07 + k * 0.07, 1.368, 1.50, 0.025, (M["white"], M_tw1, M["copper"])[k], verts=8)
 agua_d = cyl("Agua ducha", XL + 0.22, SYC, SZ0, SZ1 + 0.01, 0.06, M["water"], verts=10)
 agua_d["water_of"] = "agua_ducha"
 
@@ -177,17 +200,19 @@ TYC = BY + min(0.40, (L - SD - BY) / 2)
 box("Inodoro mochila", XL + 0.02, XL + 0.21, TYC - 0.21, TYC + 0.21, 0.40, 0.76, M["ceramic"])
 box("Inodoro mochila tapa", XL + 0.01, XL + 0.23, TYC - 0.225, TYC + 0.225, 0.76, 0.79, M["ceramic"])
 cyl("Inodoro boton", XL + 0.12, TYC, 0.79, 0.80, 0.02, M_chrome, verts=10)
-TBX = XL + 0.21 + 0.20 * 1.2           # centro de la taza (alargada en x)
-ped = cyl("Inodoro pie", TBX - 0.04, TYC, 0.0, 0.26, 0.12, M["ceramic"], verts=16)
+TSX = 1.1                              # taza alargada en x (≈0,42 m de largo; total desde la pared ≈0,67 m)
+HX = XL + 0.255                        # bisagra de la tapa: 2,5 cm delante de la mochila (abierta no la toca)
+TBX = HX + 0.19 * TSX                  # centro de la taza
+ped = cyl("Inodoro pie", TBX - 0.04, TYC, 0.0, 0.24, 0.12, M["ceramic"], verts=16)
 scale_mesh(ped, 1.4, 1.0, 1.0)
 taza = cyl("Inodoro taza", TBX, TYC, 0.24, 0.40, 0.19, M["ceramic"], verts=20)
-scale_mesh(taza, 1.2, 1.0, 1.0)
+scale_mesh(taza, TSX, 1.0, 1.0)
 asi = cyl("Inodoro asiento", TBX, TYC, 0.40, 0.42, 0.19, M["white"], verts=20)
-scale_mesh(asi, 1.2, 1.0, 1.0)
-hinge = (TBX - 0.19 * 1.2, TYC, 0.43)
-tapa = cyl("Inodoro tapa", hinge[0] + 0.19, TYC, 0.42, 0.445, 0.19, M["white"], verts=20, pivot=hinge)
-scale_mesh(tapa, 1.2, 1.0, 1.0)
-interactive(tapa, "rot", "Tapa del inodoro", axis="Y", angle=-95)
+scale_mesh(asi, TSX, 1.0, 1.0)
+hinge = (HX, TYC, 0.43)
+tapa = cyl("Inodoro tapa", TBX, TYC, 0.42, 0.445, 0.19, M["white"], verts=20, pivot=hinge)
+scale_mesh(tapa, TSX, 1.0, 1.0)
+interactive(tapa, "rot", "Tapa del inodoro", axis="Y", angle=-92)
 # portarrollos de pie cromado (entre inodoro y ducha, f0156)
 PRY = min(TYC + 0.36, L - SD - 0.10)
 cyl("Portarrollo base", XL + 0.14, PRY, 0.0, 0.02, 0.09, M_chrome, verts=12)
@@ -211,7 +236,8 @@ multi("Vanitorio", [(VX0, VX1, VY0, VY1, VZ - 0.05, VZ, 0),                     
 # toallas dobladas en el estante inferior
 for k, mt in enumerate((M_twg, M["white"], M_twg)):
     y0 = VY0 + 0.10 + k * 0.28
-    box(f"Toalla {k}", VX0 + 0.08, VX1 - 0.06, y0, y0 + 0.24, 0.15, 0.27 - 0.03 * (k == 1), mt)
+    sphere(f"Toalla {k}", (VX0 + VX1) / 2 + 0.01, y0 + 0.12, 0.153 + 0.055 - 0.012 * (k == 1), 0.5, mt,
+           sx=VX1 - VX0 - 0.15, sy=0.24, sz=0.11 - 0.024 * (k == 1), seg=12)      # pila doblada, cantos suaves
 # bacha negra rectangular de apoyo + grifería de pared negra (pico + 2 llaves en cruz)
 SYC2 = (BWIN[1][0] - 0.30) if BWIN else (VY0 + VY1) / 2   # bacha bajo el espejo, justo antes de la ventana
 SX = XR - 0.27
@@ -247,20 +273,20 @@ if BWIN:
         if ob:
             for i_ in range(len(ob.data.materials)):
                 ob.data.materials[i_] = M["trim"]
-    multi("Ventana baño hoja", [(XR + T / 2 - 0.03, XR + T / 2 - 0.01, WA, WB, (WC + WD) / 2 - 0.02, (WC + WD) / 2 + 0.02, 0)], [M["trim"]])
+    multi("Ventana baño hoja", [(XR + T / 2 - 0.03, XR + T / 2 - 0.01, WA + 0.002, WB - 0.002, (WC + WD) / 2 - 0.02, (WC + WD) / 2 + 0.02, 0)], [M["trim"]])
     MY1 = WA - 0.10
 else:
     WA, WC, WD = VY1, 1.15, 1.85
     MY1 = VY1 - 0.30
 # espejo grande de marco negro, sobre la mesada, entre la puerta y la ventana
-MY0 = max(BY + 0.25, MY1 - 0.90)
+MY0 = max(min(VY0 - 0.04, BY + 0.50) + 0.03, MY1 - 0.90)   # arranca después del toallero
 MZ0, MZ1 = VZ + 0.33, min(VZ + 0.33 + 0.72, LOFT_Z - 0.18)
 multi("Espejo baño marco", [(XR - 0.03, XR - 0.005, MY0, MY1, MZ0, MZ0 + 0.03, 0), (XR - 0.03, XR - 0.005, MY0, MY1, MZ1 - 0.03, MZ1, 0),
                             (XR - 0.03, XR - 0.005, MY0, MY0 + 0.03, MZ0, MZ1, 0), (XR - 0.03, XR - 0.005, MY1 - 0.03, MY1, MZ0, MZ1, 0)], [M["black"]])
 box("Espejo baño", XR - 0.02, XR - 0.012, MY0 + 0.03, MY1 - 0.03, MZ0 + 0.03, MZ1 - 0.03, M_mirror)
 # barra de luces: caño negro horizontal separado de la pared, con 5 portalámparas colgantes y lamparitas
 LZ = MZ1 + 0.10
-LY0, LY1 = MY0 - 0.05, MY1 + 0.05
+LY0, LY1 = MY0 - 0.02, MY1 + 0.05
 cyl("Barra luces baño base", XR - 0.01, (LY0 + LY1) / 2, LZ, LZ + 0.02, 0.06, M["blackmetal"], verts=16, axis="X", pivot=None)
 multi("Barra luces baño", [(XR - 0.16, XR - 0.14, LY0, LY1, LZ - 0.01, LZ + 0.01, 0),
                            (XR - 0.16, XR - 0.01, (LY0 + LY1) / 2 - 0.01, (LY0 + LY1) / 2 + 0.01, LZ - 0.01, LZ + 0.01, 0)], [M["blackmetal"]])
@@ -276,12 +302,13 @@ EX0, EX1 = XR - 0.40, XR - 0.03
 if EY1 - EY0 > 0.25:
     parts = [(x, x + 0.025, y, y + 0.025, 0.0, LOFT_Z - 0.20, 0) for x in (EX0, EX1 - 0.025) for y in (EY0, EY1 - 0.025)]
     for z in (0.10, 0.50, 0.90):
-        parts.append((EX0, EX1, EY0, EY1, z, z + 0.02, 0))
+        parts.append((EX0, EX1, EY0, EY1, z, z + 0.02, 0))   # toallas apoyadas encima (z+0.023)
     parts.append((EX0, EX0 + 0.02, EY0, EY1, 1.60, 1.62, 0))      # barra toallero
-    parts.append((EX0, EX1, EY1 - 0.02, EY1, 0.92, 0.94, 0))
+    parts.append((EX0, EX1, EY1 - 0.02, EY1, 1.12, 1.14, 0))      # barandita sobre las toallas
     multi("Toallero escalera", parts, [M["blackmetal"]])
     for k, (z, mt) in enumerate(((0.12, M_tw3), (0.52, M_tw2), (0.92, M_tw1))):
-        box(f"Toallas estante {k}", EX0 + 0.04, EX1 - 0.04, EY0 + 0.04, EY1 - 0.04, z, z + 0.16, mt)
+        sphere(f"Toallas estante {k}", (EX0 + EX1) / 2, (EY0 + EY1) / 2, z + 0.023 + 0.08, 0.5, mt,
+               sx=EX1 - EX0 - 0.08, sy=EY1 - EY0 - 0.08, sz=0.16, seg=12)
 
 # =================================================================== PARED DEL FONDO: ESTANTE DE MADERA
 SHX1 = XR - 0.38

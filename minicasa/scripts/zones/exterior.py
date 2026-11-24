@@ -10,18 +10,20 @@ CUR[0] = "Exterior"
 X0, X1 = XL - T, XR + T                 # caras exteriores de las paredes laterales
 Y0, Y1 = -T, L + T                      # caras exteriores de frente y fondo
 # Techo: visto de frente es un PRISMA RECTO de techo casi plano (no se ve hastial triangular). Fachada medida
-# en f0001/f0004: alto (deck→borde superior de la cenefa) ≈ 1.40 × ancho exterior.  El techo queda apenas por
-# encima de la cumbrera interior para no atravesar el cielorraso.
-ROOF_TOP = max(RIDGE, EAVE) + 0.25      # borde superior de la cenefa (f0001: ≈3.4 m sobre el deck con escala de puerta)
+# en f0001/f0004: alto (deck→borde superior de la cenefa) ≈ 1.37 × ancho exterior (2.40 → ≈3.29 m).
+# La chapa APOYA sobre el remate de estructura.py (hastiales/cenefas hasta TOP = EAVE + 0.22, definido allí
+# después de esta zona): losa de ≥2.5 cm encima, sin cruzar. Con ese TOP la proporción da ≈1.43.
+STRUCT_TOP = EAVE + 0.22                # = TOP de estructura.py (no definido todavía cuando corre esta zona)
+ROOF_FALL = 0.015                       # caída hacia el fondo (inferido: no se ve)
+ROOF_TOP = STRUCT_TOP + 0.003 + 0.025 + ROOF_FALL   # borde superior de la cenefa en el frente
 FASCIA_H = 0.24                         # cenefa negra
 ROOF_OV = 0.13                          # alero (frente y lados ≈ 0.12–0.16 m en f0004)
-ROOF_FALL = 0.04                        # caída hacia el fondo (inferido: no se ve)
 CLAD = 0.02                             # el revestimiento superior sobresale 2 cm: arma la "junta" horizontal
 BELT_Z = 2.05 + 0.22                  # junta/botaguas horizontal (f0004/f0007: 0.22 m sobre el contramarco de la puerta)
 EXT_DECK_Z = -0.04                      # superficie del deck (un poco más baja que el umbral)
 EXT_DECK_D = 1.20                       # profundidad del deck (fuga en f0001 con HFOV 62° de cameras.json → cámara a ~7.7 m)
 STEP_D = 0.27                           # huella de los 2 escalones (f0001: 0.28 / 0.22 m)
-GRAVEL_M = 0.45                         # franja de ripio alrededor (más allá de las paredes)
+GRAVEL_M = 0.30                         # franja de ripio alrededor (más allá de las paredes)
 GRAVEL_FRONT = Y0 - EXT_DECK_D - 2 * STEP_D - 0.25     # ≈ 2.0 m delante de la fachada
 
 # --- materiales propios (colores lineales muestreados de los fotogramas)
@@ -61,47 +63,63 @@ def hull(name, pts, mats, mi_fn=None, tile=1.0):
             f.material_index = mi_fn(f.normal)
     return make_obj(name, bm, mats, (0, 0, 0), tile)
 
+def boxes(name, parts, m_, tile=1.0):
+    """Una caja = un objeto (los anillos en un solo objeto daban AABB enormes que 'contenían' la casa)."""
+    for i, p in enumerate(parts):
+        box(f"{name} {i}", *p, m_, tile=tile)
+
 # --------------------------------------------------------------- terreno, ripio, deck, escalones
 box("Terreno", -40, 40, -40, 40, GROUND - 0.1, GROUND, EM["grass"], tile=5.0)
 box("Ripio", X0 - GRAVEL_M, X1 + GRAVEL_M, GRAVEL_FRONT, Y1 + GRAVEL_M, GROUND, GROUND + 0.025, EM["gravel"], tile=0.6)
 gx0, gx1, gy0, gy1, tw = X0 - GRAVEL_M - 0.1, X1 + GRAVEL_M + 0.1, GRAVEL_FRONT - 0.1, Y1 + GRAVEL_M + 0.1, 0.10
-multi("Borde durmientes", [(gx0, gx1, gy0, gy0 + tw, GROUND, GROUND + 0.10), (gx0, gx1, gy1 - tw, gy1, GROUND, GROUND + 0.10),
-                           (gx0, gx0 + tw, gy0, gy1, GROUND, GROUND + 0.10), (gx1 - tw, gx1, gy0, gy1, GROUND, GROUND + 0.10)],
-      [EM["timber"]])
-multi("Zocalo", [(X0 + 0.005, X1 - 0.005, Y0 + 0.005, Y1 - 0.005, GROUND, -0.02)], [EM["zocalo"]])
+boxes("Borde durmientes", [(gx0, gx1, gy0, gy0 + tw, GROUND, GROUND + 0.10), (gx0, gx1, gy1 - tw, gy1, GROUND, GROUND + 0.10),
+                           (gx0, gx0 + tw, gy0 + tw, gy1 - tw, GROUND, GROUND + 0.10),
+                           (gx1 - tw, gx1, gy0 + tw, gy1 - tw, GROUND, GROUND + 0.10)], EM["timber"])
+# zócalo: faldón perimetral de 4 cm bajo las paredes (hueco por dentro: no invade lo que cuelga bajo el piso)
+ZT, zz = 0.04, (GROUND + 0.002, -0.003)
+boxes("Zocalo", [(X0, X1, Y0, Y0 + ZT, *zz), (X0, X1, Y1 - ZT, Y1, *zz),
+                 (X0, X0 + ZT, Y0 + ZT, Y1 - ZT, *zz), (X1 - ZT, X1, Y0 + ZT, Y1 - ZT, *zz)], EM["zocalo"])
 box("Deck", X0, X1, Y0 - EXT_DECK_D, Y0, GROUND + 0.02, EXT_DECK_Z, EM["deck"], tile=1.0)
 _rh = (EXT_DECK_Z - GROUND) / 3          # 3 contrahuellas iguales (deck + 2 escalones), f0001
 for k in (1, 2):
     box(f"Escalon {k}", X0 - 0.02, X1 + 0.02, Y0 - EXT_DECK_D - k * STEP_D, Y0 - EXT_DECK_D - (k - 1) * STEP_D,
         GROUND + 0.02, EXT_DECK_Z - k * _rh, EM["deck"], tile=1.0)
-# senda de losetas hacia la derecha (f0001, abajo a la derecha)
-multi("Losetas senda", [(X1 + GRAVEL_M + 0.25 + i * 0.68, X1 + GRAVEL_M + 0.85 + i * 0.68, GRAVEL_FRONT + 0.15 - 0.08 * i,
+# senda de losetas hacia la derecha (f0001, abajo a la derecha), fuera del borde de durmientes
+multi("Losetas senda", [(gx1 + 0.15 + i * 0.68, gx1 + 0.75 + i * 0.68, GRAVEL_FRONT + 0.15 - 0.08 * i,
                          GRAVEL_FRONT + 0.75 - 0.08 * i, GROUND, GROUND + 0.03) for i in range(5)], [EM["paver"]])
 
 # --------------------------------------------------------------- revestimiento superior + techo
-# Fachada = rectángulo hasta la cenefa. Por encima de EAVE el revestimiento va 2 cm hacia afuera (cubre los
-# triángulos que deja el hastial y los laterales sobre EAVE), y una tapajunta negra marca la línea horizontal.
+# Todo POR FUERA de las caras exteriores de las paredes (X0, X1, Y0, Y1 con T=0.20). Sobre BELT_Z el
+# revestimiento sobresale CLAD y la tapajunta negra (debajo, BELT_Z−0.03..BELT_Z) marca la junta horizontal.
+# Muesca en la tapajunta/revestimiento detrás del farol de puerta_luces (x≈0.80–0.97, placa hasta ≈2.30).
 zc1 = ROOF_TOP - FASCIA_H + 0.02
-multi("Revestimiento superior", [
-    (X0 - CLAD, X1 + CLAD, Y0 - CLAD, Y0, BELT_Z, zc1),            # frente
-    (X0 - CLAD, X0, Y0, Y1, BELT_Z, zc1),                          # izquierda
-    (X1, X1 + CLAD, Y0, Y1, BELT_Z, zc1)], [M["siding"]])           # derecha
-bz = (BELT_Z - 0.03, BELT_Z + 0.02)
-multi("Tapajunta", [(X0 - CLAD - 0.012, X1 + CLAD + 0.012, Y0 - CLAD - 0.012, Y0, *bz),
-                    (X0 - CLAD - 0.012, X1 + CLAD + 0.012, Y1, Y1 + 0.012, *bz),
-                    (X0 - CLAD - 0.012, X0, Y0, Y1, *bz), (X1, X1 + CLAD + 0.012, Y0, Y1, *bz)], [EM["fascia"]])
-# esquineros (los cantos del revestimiento se ven como tablas verticales)
-multi("Esquineros", [(x - 0.01, x + 0.01, y - 0.01, y + 0.01, -0.02, zc1)
-                     for x in (X0 - 0.005, X1 + 0.005) for y in (Y0 - 0.005, Y1 + 0.005)], [M["siding"]])
+FAROL_X = (0.80, 0.97)
+_zf = BELT_Z + 0.035
+boxes("Revestimiento superior", [
+    (X0 - CLAD, FAROL_X[0], Y0 - CLAD, Y0, BELT_Z, zc1),                 # frente (izq. del farol)
+    (FAROL_X[1], X1 + CLAD, Y0 - CLAD, Y0, BELT_Z, zc1),                 # frente (der. del farol)
+    (FAROL_X[0], FAROL_X[1], Y0 - CLAD, Y0, _zf, zc1),                   # frente (sobre el farol)
+    (X0 - CLAD, X0, Y0, Y1, BELT_Z, zc1),                                # izquierda
+    (X1, X1 + CLAD, Y0, Y1, BELT_Z, zc1)], M["siding"])                  # derecha
+bz, bo = (BELT_Z - 0.03, BELT_Z), CLAD + 0.012
+boxes("Tapajunta", [(X0 - bo, FAROL_X[0], Y0 - bo, Y0, *bz), (FAROL_X[1], X1 + bo, Y0 - bo, Y0, *bz),
+                    (X0 - bo, X1 + bo, Y1, Y1 + 0.012, *bz),
+                    (X0 - bo, X0, Y0, Y1, *bz), (X1, X1 + bo, Y0, Y1, *bz)], EM["fascia"])
+# esquineros: tablas verticales de 2.5 cm en las 4 esquinas, pegadas por fuera (frente: hasta la tapajunta;
+# fondo: hasta el revestimiento superior, que no cubre el fondo para no tapar las ventanas del altillo)
+EQ = 0.025
+boxes("Esquineros", [(X0 - EQ, X0, Y0 - EQ, Y0, 0.0, bz[0]), (X1, X1 + EQ, Y0 - EQ, Y0, 0.0, bz[0]),
+                     (X0 - EQ, X0, Y1, Y1 + EQ, 0.0, bz[0]), (X1, X1 + EQ, Y1, Y1 + EQ, 0.0, bz[0]),
+                     (X0 - CLAD, X0, Y1, Y1 + EQ, bz[1], ROOF_TOP - FASCIA_H), (X1, X1 + CLAD, Y1, Y1 + EQ, bz[1], ROOF_TOP - FASCIA_H)], M["siding"])
 rx0, rx1, ry0, ry1 = X0 - ROOF_OV, X1 + ROOF_OV, Y0 - ROOF_OV, Y1 + ROOF_OV
 zt0, zt1 = ROOF_TOP, ROOF_TOP - ROOF_FALL
-zb = max(EAVE, RIDGE) + 0.05             # la losa del techo queda siempre por encima del cielorraso interior
+zb = STRUCT_TOP + 0.003                  # la chapa apoya sobre hastiales/cenefas de estructura (3 mm de luz)
 hull("Techo", [(rx0, ry0, zt0), (rx1, ry0, zt0), (rx0, ry1, zt1), (rx1, ry1, zt1),
                (rx0, ry0, zb), (rx1, ry0, zb), (rx0, ry1, zb), (rx1, ry1, zb)],
      [EM["fascia"], EM["membrane"]], mi_fn=lambda n: 1 if n.z > 0.5 else 0)
-fz0 = ROOF_TOP - FASCIA_H                  # cenefa negra perimetral (por fuera de las paredes)
-multi("Cenefa", [(rx0, rx1, ry0, Y0 - CLAD, fz0, zb), (rx0, rx1, Y1 + CLAD, ry1, fz0, zb),
-                 (rx0, X0 - CLAD, ry0, ry1, fz0, zb), (X1 + CLAD, rx1, ry0, ry1, fz0, zb)], [EM["fascia"]])
+fz0 = ROOF_TOP - FASCIA_H                  # cenefa negra perimetral (por fuera del revestimiento)
+boxes("Cenefa", [(rx0, rx1, ry0, Y0 - CLAD, fz0, zb), (rx0, rx1, Y1, ry1, fz0, zb),
+                 (rx0, X0 - CLAD, Y0 - CLAD, Y1, fz0, zb), (X1 + CLAD, rx1, Y0 - CLAD, Y1, fz0, zb)], EM["fascia"])
 
 # --------------------------------------------------------------- parrilla (plancha negra con carro, f0003)
 gxc, gyc, gz = X0 - 1.25, Y0 + 0.10, GROUND
@@ -125,13 +143,14 @@ multi("Soporte condensadoras", [(X0 - 0.86, X0 - 0.50, Y0 + 0.52, Y0 + 2.18, GRO
 multi("Caneria aire", [(X0 - 0.52, X0 - CLAD, Y0 + 0.90, Y0 + 0.96, GROUND + 0.60, GROUND + 0.66)], [M["white"]])
 
 # --------------------------------------------------------------- lado derecho: poste de servicio y galpón (f0003)
-multi("Poste servicio", [(X1 + 0.55, X1 + 0.65, Y0 + 2.2, Y0 + 2.3, GROUND, GROUND + 1.9),
-                         (X1 + 0.50, X1 + 0.55, Y0 + 2.12, Y0 + 2.38, GROUND + 1.05, GROUND + 1.55)], [EM["timber"]])
-box("Medidor", X1 + 0.44, X1 + 0.50, Y0 + 2.15, Y0 + 2.35, GROUND + 1.10, GROUND + 1.45, M["gray"])
-sx0, sx1, sy0, sy1, sh = X1 + 0.35, X1 + 1.25, Y0 + 3.9, Y0 + 5.0, 1.65
+PX = gx1 + 0.12                          # poste fuera del borde de durmientes
+multi("Poste servicio", [(PX + 0.06, PX + 0.16, Y0 + 2.2, Y0 + 2.3, GROUND, GROUND + 1.9),
+                         (PX + 0.01, PX + 0.06, Y0 + 2.12, Y0 + 2.38, GROUND + 1.05, GROUND + 1.55)], [EM["timber"]])
+box("Medidor", PX - 0.05, PX + 0.01, Y0 + 2.15, Y0 + 2.35, GROUND + 1.10, GROUND + 1.45, M["gray"])
+sx0, sx1, sy0, sy1, sh = gx1 + 0.12, gx1 + 1.02, Y0 + 3.9, Y0 + 5.0, 1.65
 box("Galpon", sx0, sx1, sy0, sy1, GROUND, GROUND + sh, EM["shed"])
-multi("Galpon esquineros", [(x - 0.04, x + 0.04, sy0 - 0.01, sy0 + 0.03, GROUND, GROUND + sh) for x in (sx0, sx1)] +
-      [(sx0 - 0.04, sx1 + 0.04, sy0 - 0.02, sy0 + 0.02, GROUND + sh - 0.08, GROUND + sh)], [M["white"]])
+multi("Galpon esquineros", [(x - 0.04, x + 0.04, sy0 - 0.03, sy0, GROUND, GROUND + sh) for x in (sx0, sx1)] +
+      [(sx0 - 0.04, sx1 + 0.04, sy0 - 0.03, sy0, GROUND + sh - 0.08, GROUND + sh)], [M["white"]])
 box("Galpon techo", sx0 - 0.1, sx1 + 0.1, sy0 - 0.1, sy1 + 0.1, GROUND + sh, GROUND + sh + 0.08, EM["fascia"])
 
 # --------------------------------------------------------------- rocas y arbustos
@@ -145,19 +164,33 @@ def blob(bm, x, y, z, r, sx=1, sy=1, sz=1, mi=0, sub=2, jit=0.0):
     for f in fs:
         f.material_index = mi
 
+# Cada roca/arbusto es un objeto propio y TODO queda fuera de la huella de la casa + 0.3 m, del deck/escalones,
+# del borde de durmientes, del galpón, del poste y de las condensadoras (se verifica abajo).
+_keepout = [(X0 - 0.3, X1 + 0.3, Y0 - EXT_DECK_D - 2 * STEP_D - 0.3, Y1 + 0.3),        # casa + deck + escalones
+            (gx0 - 0.05, gx1 + 0.05, gy0 - 0.05, gy1 + 0.05),                           # cama de ripio con borde
+            (sx0 - 0.1, sx1 + 0.1, sy0 - 0.1, sy1 + 0.1), (PX - 0.1, PX + 0.3, Y0 + 2.0, Y0 + 2.5),
+            (X0 - 0.95, X0 - 0.4, Y0 + 0.4, Y0 + 2.3), (gxc - 0.7, gxc + 0.7, gyc - 0.35, gyc + 0.35)]
+
+def _free(x, y, rx, ry):
+    for (a0, a1, b0, b1) in _keepout:
+        if x + rx > a0 and x - rx < a1 and y + ry > b0 and y - ry < b1:
+            raise ValueError(f"vegetación/roca en ({x:.2f},{y:.2f}) invade la zona {a0:.2f}..{a1:.2f} × {b0:.2f}..{b1:.2f}")
+
 random.seed(11)
-bm = bmesh.new()
-for (x, y, r, sz) in [(2.7, -5.3, 0.62, 0.95), (6.0, 9.0, 0.9, 0.55), (7.2, 9.6, 0.6, 0.5), (-6.5, 11.0, 0.5, 0.6),
-                      (5.2, 8.2, 0.35, 0.6)]:
+for i, (x, y, r, sz) in enumerate([(2.7, -5.3, 0.62, 0.95), (6.0, 9.0, 0.9, 0.55), (7.9, 9.9, 0.6, 0.5),
+                                   (-6.5, 11.0, 0.5, 0.6), (5.2, 8.2, 0.35, 0.6)]):
+    _free(x, y, r * 1.1 * 1.13, r * 0.9 * 1.13)
+    bm = bmesh.new()
     blob(bm, x, y, GROUND + r * sz * 0.55, r, 1.1, 0.9, sz, jit=0.12)
-bm.normal_update()
-make_obj("Rocas", bm, [EM["rock"]], (0, 0, 0), 1.0)
-bm = bmesh.new()
-for (x, y, r) in [(X1 + 0.75, Y0 + 0.9, 0.55), (X1 + 1.2, Y0 + 1.6, 0.45), (X0 - 0.5, Y1 + 0.8, 0.5),
-                  (X1 + 0.6, Y1 + 0.5, 0.6), (-5.5, 1.5, 0.7), (5.0, -0.5, 0.6), (-4.0, 6.0, 0.8)]:
-    blob(bm, x, y, GROUND + r * 0.8, r, 1, 1, 1.3, jit=0.2, sub=3)
-bm.normal_update()
-make_obj("Arbustos", bm, [EM["shrub"]], (0, 0, 0), 1.0)
+    bm.normal_update()
+    make_obj(f"Roca {i}", bm, [EM["rock"]], (0, 0, 0), 1.0)
+for i, (x, y, r) in enumerate([(gx1 + 0.68, Y0 - 0.9, 0.45), (gx1 + 0.72, Y0 + 1.0, 0.40), (gx0 - 0.7, Y1 + 0.9, 0.5),
+                               (gx1 + 0.75, Y1 + 1.1, 0.55), (-5.5, 1.5, 0.7), (5.0, -0.5, 0.6), (-4.0, 6.0, 0.8)]):
+    _free(x, y, r * 1.21, r * 1.21)
+    bm = bmesh.new()
+    blob(bm, x, y, GROUND + r * 0.8, r, 1, 1, 1.3, jit=0.2, sub=2)
+    bm.normal_update()
+    make_obj(f"Arbusto {i}", bm, [EM["shrub"]], (0, 0, 0), 1.0)
 
 # --------------------------------------------------------------- bosque (troncos altos y finos, copas altas)
 # Bosque caducifolio claro: troncos rectos grises de 15–25 m, copas que empiezan a ~2/3 de la altura,
