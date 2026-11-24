@@ -19,7 +19,7 @@ OUT = os.path.join(ROOT, "out")
 # ----------------------------------------------------------------- medidas
 W = 2.00          # ancho interior (COLMAP, escala por puerta 2,03 m; ±3 %; ver audit/medidas.md)
 L = 5.79          # largo interior (cara int. pared frontal y=0 -> cara int. pared trasera)
-T = 0.12          # espesor de pared (estimado desde el exterior)
+T = 0.20          # espesor de pared: interior medido 2,00; fachada exterior ≈2,4 m (f0001) -> paredes gruesas
 EAVE = 3.12       # altura interior de paredes = cielorraso plano (no hay cumbrera interior)
 RIDGE = 3.12      # techo casi plano: el cielorraso es plano a EAVE; RIDGE solo fija la chapa exterior
 GROUND = -0.50    # nivel del terreno (deck ~2 escalones bajo el umbral)

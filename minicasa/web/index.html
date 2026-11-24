@@ -39,6 +39,11 @@ button.on{background:var(--accent);color:var(--accent-fg);border-color:var(--acc
 #bar{width:min(320px,70vw);height:6px;border-radius:3px;background:var(--line);overflow:hidden}
 #bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
 #load p{margin:0;color:var(--muted)}
+#cmp{position:fixed;inset:0;z-index:20;background:rgba(10,10,11,.92);overflow:auto;padding:calc(env(safe-area-inset-top,0px) + 12px) max(16px,env(safe-area-inset-right,0px)) 24px max(16px,env(safe-area-inset-left,0px))}
+.cmpbox{max-width:1100px;margin:0 auto;display:grid;gap:10px}
+.cmphead{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.cmphead span{color:var(--muted);font-size:12.5px;flex:1 1 240px}
+#cmp img{width:100%;height:auto;border-radius:8px;display:block}
 @media (max-width:640px){ #help{display:none} .brand p{display:none} }
 @media (pointer:coarse){ #joy{display:block} #help{display:none} }
 @media (prefers-reduced-motion:reduce){ #cross,#tip{transition:none} }
@@ -57,12 +62,14 @@ button.on{background:var(--accent);color:var(--accent-fg);border-color:var(--acc
     <button id="bLoft" type="button">Altillo</button>
     <button id="bLights" type="button" class="on">Luces</button>
     <button id="bOut" type="button">Exterior</button>
+    <button id="bCmp" type="button">Comparar con el video</button>
   </div>
 </div>
 <div id="cross" class="hud"></div>
 <div id="tip" class="hud"></div>
 <div id="help" class="hud"><b style="color:var(--fg)">Controles</b><br><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> o flechas para caminar · arrastrá para mirar · <kbd>clic</kbd> o <kbd>E</kbd> para usar lo que está en el centro · <kbd>Shift</kbd> corre</div>
 <div id="joy" class="hud" style="pointer-events:auto"><div id="knob"></div></div>
+<div id="cmp" hidden><div class="cmpbox"><div class="cmphead"><b>Video vs. modelo</b><span>Cada par: fotograma del video (izq.) y render del modelo desde la misma cámara (der.), resuelta con COLMAP.</span><button id="cmpClose" type="button">Cerrar</button></div><img src="comparacion.jpg" alt="Comparación entre fotogramas del video y renders del modelo desde las mismas cámaras"></div></div>
 <div id="load"><h2>Mini Casa 3D</h2><div id="bar"><i></i></div><p id="loadmsg">Cargando el modelo…</p></div>
 
 <script type="importmap">
@@ -108,7 +115,7 @@ const colliders = [];
 let spawn = new THREE.Vector3(0.55, 0, 4.5), loftSpot = null, downSpot = null;
 let loftTrigger = null;
 const player = { pos: new THREE.Vector3(), yaw: Math.PI, pitch: -0.05, vy: 0, inLoft: false };
-const EYE = 1.6, LOFT_EYE = 0.95, RADIUS = 0.22, STEP = 0.32;
+const EYE = 1.6, LOFT_EYE = 0.55, RADIUS = 0.22, STEP = 0.32;
 
 const loader = new GLTFLoader();
 function onModel(gltf) {
@@ -303,10 +310,12 @@ function moveStick(e) {
 function goTo(where) {
   setLoft(false);
   if (where === 'out') { player.pos.copy(spawn); player.yaw = 0; player.pitch = 0.02; }
-  if (where === 'door') { player.pos.set(0.55, -0.02, 1.1); player.yaw = 0; player.pitch = 0; }
-  if (where === 'in') { player.pos.set(0.45, 0, -0.6); player.yaw = 0; player.pitch = -0.05; const d = groups.get('Puerta entrada'); if (d) d.open = true; }
+  if (where === 'door') { player.pos.set(0.19, -0.04, 1.3); player.yaw = 0; player.pitch = 0; }
+  if (where === 'in') { player.pos.set(0.19, 0, -0.55); player.yaw = 0; player.pitch = -0.05; const d = groups.get('Puerta entrada'); if (d) d.open = true; }
 }
 document.getElementById('bOut').onclick = () => goTo('out');
+document.getElementById('bCmp').onclick = () => { document.getElementById('cmp').hidden = false; };
+document.getElementById('cmpClose').onclick = () => { document.getElementById('cmp').hidden = true; };
 document.getElementById('bEnter').onclick = () => goTo('door');
 document.getElementById('bInside').onclick = () => goTo('in');
 document.getElementById('bLights').onclick = () => setLights(!lightsOn);

@@ -8,8 +8,8 @@ FRONT_WIN = (-0.92, -0.32, 1.20, 2.17)
 # pared trasera: dos ventanitas del altillo (casi al nivel del piso del altillo)
 BACK_WINS = [(-0.97, -0.40, 2.42, 2.98), (0.30, 0.89, 2.42, 2.98)]
 # paredes laterales: (y0, y1, z0, z1)
-LEFT_WINS = [(1.51, 2.21, 1.14, 2.14)]                                   # x = XL: ventana sobre la bacha
-RIGHT_WINS = [(1.50, 2.21, 1.13, 2.18), (5.10, 5.70, 1.20, 2.12)]        # x = XR: sobre mueble negro/sillón ; baño
+LEFT_WINS = [(1.51, 2.21, 1.14, 2.14), (4.10, 4.57, 1.21, 2.00)]        # x = XL: sobre la bacha ; baño (sobre inodoro, f0137)
+RIGHT_WINS = [(1.50, 2.21, 1.13, 2.18), (5.25, 5.70, 1.20, 2.12)]        # x = XR: sobre mueble negro/sillón ; baño
 TOP = EAVE + 0.22                                                         # remate de paredes bajo la chapa
 wall_with_openings("Pared frontal", "y", -T, 0.0, XL - T, XR + T, 0.0, EAVE, [FRONT_DOOR, FRONT_WIN],
                    [M["plywood"], M["siding"]], 0, 1, +1)
@@ -26,7 +26,13 @@ wall_with_openings("Pared izquierda", "x", XL - T, XL, 0.0, L, 0.0, EAVE, LEFT_W
 wall_with_openings("Pared derecha", "x", XR, XR + T, 0.0, L, 0.0, EAVE, RIGHT_WINS,
                    [M["plywood"], M["siding"]], 0, 1, -1)
 # revestimiento blanco del baño (machimbre) sobre paredes laterales y trasera, hasta el cielorraso del baño
-box("Baño revest izq", XL, XL + 0.01, BATH_Y, L, 0.0, LOFT_Z, M["white_planks"])
+_lw = sorted(w for w in LEFT_WINS if BATH_Y < (w[0] + w[1]) / 2 < L)
+_pl, _y = [], BATH_Y
+for (a, b, c, d) in _lw:
+    _pl += [(XL, XL + 0.01, _y, a, 0, LOFT_Z), (XL, XL + 0.01, a, b, 0, c), (XL, XL + 0.01, a, b, d, LOFT_Z)]
+    _y = b
+_pl.append((XL, XL + 0.01, _y, L, 0, LOFT_Z))
+multi("Baño revest izq", _pl, [M["white_planks"]])
 _bw = [w for w in RIGHT_WINS if BATH_Y < (w[0] + w[1]) / 2 < L]
 _parts, _y = [], BATH_Y
 for (a, b, c, d) in sorted(_bw):
@@ -89,9 +95,9 @@ for s_ in (-1, 1):
 # tabique del baño con hueco de puerta (hueco entre jambas: 0,64 x 2,10); frente con mural, lado baño blanco
 BATH_DOOR = (-0.37, 0.27, 0.0, 2.10)
 part = wall_with_openings("Tabique baño", "y", BATH_Y - 0.08, BATH_Y, XL, XR, 0.0, LOFT_Z, [BATH_DOOR],
-                          [M["white_planks"], M["mural"]], 0, 1, +1)
+                          [M["white"], M["mural"]], 0, 1, +1)   # lado baño: panel blanco liso
 # altillo: piso (LOFT_Z..LOFT_Z+0.08) + viga frontal (lleva el riel del granero)
-box("Piso altillo", XL, XR, BATH_Y - 0.10, L, LOFT_Z, LOFT_Z + 0.08, M["pine"], tile=1.2)
+box("Piso altillo", XL, XR, BATH_Y - 0.10, L, LOFT_Z, LOFT_Z + 0.08, mat("Piso altillo oscuro", (0.17, 0.15, 0.12), rough=0.6), tile=1.2)  # ~#736A60
 box("Cielorraso baño", XL, XR, BATH_Y, L, LOFT_Z - 0.01, LOFT_Z, M["white_planks"])
 box("Viga altillo", XL, XR, BATH_Y - 0.12, BATH_Y - 0.06, LOFT_Z - 0.12, LOFT_Z + 0.16, M["pine"])
 box("Riel granero", -1.0, 0.95, BATH_Y - 0.13, BATH_Y - 0.11, LOFT_Z - 0.06, LOFT_Z - 0.03, M["blackmetal"])

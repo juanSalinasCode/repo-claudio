@@ -292,8 +292,13 @@ hexring("Mandala", XR - 0.002, RW_SMALL[1] + 0.12, 1.90, 0.16, 0.022, 0.015, MC[
 box("Repisa ventana", XR - 0.14, XR, RW_SMALL[0] - 0.08, RW_SMALL[1] + 0.08, RW_SMALL[2] - 0.08, RW_SMALL[2] - 0.05, M["pine"])
 cyl("Florero", XR - 0.07, RW_SMALL[0] + 0.05, RW_SMALL[2] - 0.05, RW_SMALL[2] + 0.18, 0.03, mat("Florero vidrio", _lin(120, 140, 170), alpha=0.6), verts=8)
 # cartel "LIFE" apoyado en el alféizar de la ventana grande de la derecha (f0090)
-RW_BIG = [w for w in RIGHT_WINS if w[0] > RW_SMALL[1]][0]
-box("Cartel LIFE", XR - 0.10, XR - 0.09, RW_BIG[0] + 0.12, RW_BIG[0] + 0.40, RW_BIG[2] - 0.05, RW_BIG[2] + 0.30, MC["life"])
+_rw = [w for w in RIGHT_WINS if RW_SMALL[1] < w[0] < BATH_Y - 0.1]   # (las medidas reales dejan una sola ventana en el lado +x del living)
+if _rw:
+    RW_BIG = _rw[0]
+    box("Cartel LIFE", XR - 0.10, XR - 0.09, RW_BIG[0] + 0.12, RW_BIG[0] + 0.40, RW_BIG[2] - 0.05, RW_BIG[2] + 0.30, MC["life"])
+else:
+    RW_BIG = RW_SMALL
+    box("Cartel LIFE", XR - 0.10, XR - 0.09, RW_SMALL[1] + 0.40, RW_SMALL[1] + 0.68, 1.45, 1.80, MC["life"])
 # estante alto sobre la entrada (pared derecha, bajo el alero)
 box("Estante alto entrada", XR - 0.34, XR, 0.0, SY0 + 0.20, 2.10, 2.13, M["plywood"], tile=1.0)
 box("Estante alto frente", XR - 0.36, XR - 0.34, 0.0, SY0 + 0.20, 2.10, 2.22, M["plywood"], tile=1.0)
