@@ -63,11 +63,11 @@ MC = dict(
 PY = BATH_Y - 0.08              # cara living del tabique (3.86)
 KY0 = 0.33
 KY1 = 2.20
-FRIDGE_Y0 = KY1 + 0.03
-FRIDGE_Y1 = FRIDGE_Y0 + 0.56
+FRIDGE_Y0 = max(w[1] for w in LEFT_WINS if w[1] < BATH_Y) + 0.07   # pasando el marco de la ventana de la bacha (2.28)
+FRIDGE_Y1 = FRIDGE_Y0 + 0.55
 STORE_Y1 = PY - 0.15            # la hoja granero abierta ocupa y 3.73-3.80 hasta x=XL
 CUBE_Y0, CUBE_Y1 = 0.80, 1.62
-SOFA_Y0, SOFA_Y1 = 2.55, PY - 0.05
+SOFA_Y0, SOFA_Y1 = 2.55, PY - 0.11            # hoja granero en y 3.764-3.802: sillón termina en 3.75
 SOFA_X0, SOFA_X1 = XR - 0.70, XR - 0.10   # 0.62 de fondo; separado de la pared por el panel/pedadas plegadas
 STAIR_Y1 = PY - 0.02            # borde del altillo (llegada)
 
@@ -96,15 +96,15 @@ casco = [(XL, CX1, KY0, KY1, TOE, TOE + PT, 0),                                #
          (XL + PT, CX1, KY1 - PT, KY1, TOE + PT, CZ - CT, 0),                  # lateral fondo
          (XL + PT, CX1, YA1 - PT / 2, YA1 + PT / 2, TOE + PT, CZ - CT, 0),     # divisor cajonera | puertas
          (XL + PT, CX1, YB0 - PT / 2, YB0 + PT / 2, TOE + PT, CZ - CT, 0),     # divisor puertas | bacha
-         (CX1 - 0.08, CX1, KY0 + PT, KY1 - PT, CZ - CT - PT, CZ - CT, 0),      # travesaño frontal superior
+         (CX1 - 0.06, CX1, KY0 + PT, KY1 - PT, CZ - CT - PT, CZ - CT, 0),      # travesaño frontal superior
          (XL + PT, XL + 0.08, KY0 + PT, KY1 - PT, CZ - CT - PT, CZ - CT, 0),   # travesaño trasero superior
          (XL + PT, CX1, YA1 + PT / 2, YB0 - PT / 2, 0.45, 0.45 + PT, 0)]       # estante tras las puertas
 multi("Bajo mesada", casco, [MC["wood_dark"]])
 box("Zocalo cocina", XL + PT, FX - 0.07, KY0 + 0.02, KY1 - 0.02, 0.0, TOE, MC["wood_dark"])
 
 # bacha (medidas necesarias para el hueco de la mesada)
-SW, SD = 0.54, 0.38          # largo (y) y ancho (x) de la bacha
-sx0, sx1 = XL + 0.10, XL + 0.10 + SD
+SW, SD = 0.54, 0.33          # largo (y) y ancho (x) de la bacha
+sx0, sx1 = XL + 0.17, XL + 0.17 + SD    # la canilla va detrás, fuera del alféizar (x <= XL+0.12)
 sy0, sy1 = SINK_Y - SW / 2, SINK_Y + SW / 2
 # mesada maciza con canto visible y pequeño vuelo, con el hueco de la bacha (2 mm de luz)
 _mx0, _mx1, _my0, _my1 = XL, FX + 0.035, KY0 - 0.01, KY1 + 0.01
@@ -188,12 +188,12 @@ canilla = multi("Canilla cocina", [(-0.025, 0.025, -0.025, 0.025, 0.0, 0.03),   
                                    (0.17, 0.20, -0.016, 0.016, 0.28, 0.40),           # pico extraíble
                                    (0.0, 0.07, 0.013, 0.023, 0.10, 0.12)],            # palanca
                 [M["blackmetal"]], pivot=(0, 0, 0))
-canilla.location = (XL + 0.06, CANY + 0.10, CZ)
+canilla.location = (XL + 0.135, CANY + 0.10, CZ)
 interactive(canilla, "water", "Canilla de la cocina", group="agua_cocina")
-agua_c = cyl("Agua cocina", XL + 0.06 + 0.185, CANY + 0.10, CZ - 0.20, CZ + 0.28, 0.010, M["water"], verts=8)
+agua_c = cyl("Agua cocina", XL + 0.135 + 0.185, CANY + 0.10, CZ - 0.20, CZ + 0.28, 0.010, M["water"], verts=8)
 agua_c["water_of"] = "agua_cocina"
 # botellas de jabón junto a la canilla
-for j, (dy, h) in enumerate([(0.17, 0.20), (0.24, 0.22), (0.31, 0.16)]):
+for j, (dy, h) in enumerate([(0.17, 0.12), (0.24, 0.13), (0.31, 0.11)]):   # bajo el alféizar
     cyl(f"Jabon {j}", XL + 0.05, sy0 - dy + 0.10, CZ, CZ + h, 0.03, MC["soap"], verts=10)
 # taco de cuchillos al fondo de la mesada (f0066)
 kb = YA1 + 0.14
@@ -281,9 +281,9 @@ for row in range(3):
     cyl(f"Canasto ojal {row}", SX0 + 0.006, (y0 + y1) / 2, (z0 + z1) / 2 + 0.06, (z0 + z1) / 2 + 0.07, 0.018,
         M["steel"], verts=8, axis="X")
 y0, y1, z0, z1 = cubby(1, 2)
-box("Caja roja", SX0 + 0.06, SX1 - 0.05, y0 + 0.03, y1 - 0.05, z0, z0 + 0.06, MC["red"])
+box("Caja roja", SX0 + 0.06, SX1 - 0.05, y0 + 0.03, y1 - 0.05, z0 + 0.001, z0 + 0.06, MC["red"])
 y0, y1, z0, z1 = cubby(1, 1)
-box("Manta azul", SX0 + 0.02, SX1 - 0.03, y0 + 0.01, y1 - 0.01, z0, z0 + 0.17, MC["blue"])
+box("Manta azul", SX0 + 0.02, SX1 - 0.03, y0 + 0.01, y1 - 0.01, z0 + 0.001, z0 + 0.17, MC["blue"])
 y0, y1, z0, z1 = cubby(1, 0)
 box("Canasto bajo", SX0 + 0.012, SX1 - 0.02, y0 + 0.01, y1 - 0.01, z0 + 0.001, z1 - 0.02, MC["bin"])
 box("Tapa menta", SX0 - 0.005, SX1, SY0, SY1, CBH, CBH + 0.006, MC["mint_top"])
@@ -323,9 +323,8 @@ def hexring(name, xw, yc, zc, r, wdt, depth, m_):
     bm.normal_update()
     return make_obj(name, bm, [m_])
 hexring("Mandala", XR - 0.002, SY0 + 0.20, 1.86, 0.16, 0.022, 0.015, MC["mandala"])
-# repisa de la ventana angosta (con florero)
-box("Repisa ventana", XR - 0.14, XR, RW_SMALL[0] - 0.08, RW_SMALL[1] + 0.08, RW_SMALL[2] - 0.08, RW_SMALL[2] - 0.05, M["pine"])
-cyl("Florero", XR - 0.07, RW_SMALL[0] + 0.05, RW_SMALL[2] - 0.05, RW_SMALL[2] + 0.18, 0.03, mat("Florero vidrio", _lin(120, 140, 170), alpha=0.6), verts=8)
+# florero sobre el alféizar de la ventana +x (la repisa la da el alféizar de Ventanas)
+cyl("Florero", XR - 0.09, RW_SMALL[0] + 0.05, RW_SMALL[2] - 0.05, RW_SMALL[2] + 0.18, 0.025, mat("Florero vidrio", _lin(120, 140, 170), alpha=0.6), verts=8)
 # cartel "LIFE" apoyado en el alféizar de la ventana grande de la derecha (f0090)
 _rw = [w for w in RIGHT_WINS if RW_SMALL[1] < w[0] < BATH_Y - 0.1]   # (las medidas reales dejan una sola ventana en el lado +x del living)
 if _rw:

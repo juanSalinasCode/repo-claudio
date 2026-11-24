@@ -57,14 +57,13 @@ def add_cyl(bm, axis, a, b, s0, s1, r, pivot, segs=12, mi=0):
 
 # ------------------------------------------------------------------ heladera retro (tipo Galanz/Classic)
 # Contra la pared izquierda, pegada al final de la mesada; frente hacia el pasillo (+x).
-_KY1 = globals().get("KY1", BATH_Y - 1.85)
-FW, FD, FH = 0.60, 0.64, 1.47           # ancho (y), profundidad (x), alto
+# Posiciones del presupuesto de paredes definido en cocina.py (FRIDGE_Y0/Y1, SOFA_*, PY, STORE_Y1).
+FW, FD, FH = FRIDGE_Y1 - FRIDGE_Y0, 0.60, 1.47   # ancho (y), profundidad (x), alto
 FX0 = XL + 0.04
 FX1 = FX0 + FD                          # plano de las puertas
 # En el video la heladera está pegada a la mesada y deja ~0.5 m hasta el tabique para guardar mesa y sillas.
 # La auditoría con cámaras (heladera1/2) confirma que va pegada a la mesada: se ancla a KY1.
-FY0 = _KY1 + 0.02
-FY1 = FY0 + FW
+FY0, FY1 = FRIDGE_Y0, FRIDGE_Y1
 FZ0 = 0.06                              # zócalo
 FZ_D = 0.60                             # división freezer (abajo) / heladera (arriba)
 RR = 0.06                               # radio de los cantos superiores redondeados
@@ -82,16 +81,24 @@ add_cyl(bm, "y", FX0 + RR, FH - RR, FY0 + RR, FY1 - RR, RR, (0, 0, 0))
 bm.normal_update()
 make_obj("Heladera cuerpo", bm, [M["mint"]])
 box("Heladera zocalo", FX0 + 0.04, FX1 - 0.04, FY0 + 0.03, FY1 - 0.03, 0.0, FZ0, M["black"])
-box("Heladera interior", FX0 + 0.03, FX1 - 0.01, FY0 + 0.03, FY1 - 0.03, FZ0 + 0.03, FH - 0.03, M["fridge_in"])
+_e = 0.006                              # revestimiento interior (hueco, no macizo)
+_lin_parts = []
+for (za, zb) in [(FZ0 + 0.032, FZ_D - 0.022), (FZ_D + 0.022, FH - 2 * RR - 0.004)]:
+    _lin_parts += [(FX0 + 0.032, FX0 + 0.032 + _e, FY0 + 0.032, FY1 - 0.032, za, zb, 0),           # fondo
+                   (FX0 + 0.032 + _e, FX1 - 0.012, FY0 + 0.032, FY0 + 0.032 + _e, za, zb, 0),     # laterales
+                   (FX0 + 0.032 + _e, FX1 - 0.012, FY1 - 0.032 - _e, FY1 - 0.032, za, zb, 0),
+                   (FX0 + 0.032 + _e, FX1 - 0.012, FY0 + 0.032 + _e, FY1 - 0.032 - _e, za, za + _e, 0),   # piso
+                   (FX0 + 0.032 + _e, FX1 - 0.012, FY0 + 0.032 + _e, FY1 - 0.032 - _e, zb - _e, zb, 0)]   # techo
+multi("Heladera interior", _lin_parts, [M["fridge_in"]])
 for k, z in enumerate([0.88, 1.12]):
     box(f"Heladera estante {k}", FX0 + 0.06, FX1 - 0.06, FY0 + 0.04, FY1 - 0.04, z, z + 0.008, M["glass"])
-box("Freezer cajon interior", FX0 + 0.08, FX1 - 0.04, FY0 + 0.05, FY1 - 0.05, FZ0 + 0.06, FZ_D - 0.12, M["glass"])
+# (los estantes apoyan en los laterales del revestimiento: 2 mm de luz)
+box("Freezer cajon interior", FX0 + 0.08, FX1 - 0.04, FY0 + 0.05, FY1 - 0.05, FZ0 + 0.04, FZ_D - 0.12, M["glass"])
 # puerta superior: bisagra en el canto y=FY1 (hacia el tabique), abre hacia el pasillo (como en f0094)
 bm = bmesh.new(); pv = (FX1 + DT, FY1, FZ_D + 0.02)
-add_box(bm, FX1, FX1 + DT, FY0, FY1, FZ_D + 0.025, FH - RR, pivot=pv)
-add_box(bm, FX1, FX1 + DT - RR * 0.3, FY0, FY1, FH - RR, FH - 0.005, pivot=pv)
-add_cyl(bm, "y", FX1 + DT - RR, FH - RR, FY0, FY1, RR, pv)       # canto superior curvo de la puerta
-add_box(bm, FX1 - 0.003, FX1 + 0.002, FY0 + 0.01, FY1 - 0.01, FZ_D + 0.04, FH - 0.04, pivot=pv, mi=2)   # burlete
+add_box(bm, FX1 + 0.002, FX1 + DT, FY0, FY1, FZ_D + 0.025, FH - DT / 2, pivot=pv)
+add_cyl(bm, "y", FX1 + 0.002 + (DT - 0.002) / 2, FH - DT / 2, FY0, FY1, (DT - 0.002) / 2, pv)   # canto superior curvo
+add_box(bm, FX1 + 0.0, FX1 + 0.002, FY0 + 0.01, FY1 - 0.01, FZ_D + 0.04, FH - 0.04, pivot=pv, mi=2)   # burlete
 # manija cromada horizontal abajo a la izquierda (lado de la mesada) + soportes
 hz = FZ_D + 0.12
 add_box(bm, FX1 + DT + 0.035, FX1 + DT + 0.05, FY0 + 0.05, FY0 + 0.26, hz - 0.012, hz + 0.012, pivot=pv, mi=1)
@@ -101,43 +108,45 @@ add_box(bm, FX1 + DT, FX1 + DT + 0.04, FY0 + 0.24, FY0 + 0.26, hz - 0.01, hz + 0
 add_box(bm, FX1 + DT, FX1 + DT + 0.006, FY0 + 0.05, FY0 + 0.33, FH - 0.215, FH - 0.205, pivot=pv, mi=1)
 bm.normal_update()
 pu = make_obj("Heladera puerta", bm, [M["mint"], M_chrome, M_gasket], pv)
-interactive(pu, "rot", "Puerta de la heladera", axis="Z", angle=105)
+interactive(pu, "rot", "Puerta de la heladera", axis="Z", angle=100)
 lg = decal("Heladera logo", "x", FX1 + DT + 0.007, FY0 + 0.06, FY0 + 0.32, FH - 0.25, FH - 0.17, M_logo)
 lg.parent = pu
 lg.matrix_parent_inverse = pu.matrix_basis.inverted()
 # freezer: puerta inferior con la misma bisagra (en el video se abre como puerta, con cajones transparentes adentro)
 bm = bmesh.new(); pv = (FX1 + DT, FY1, FZ0)
-add_box(bm, FX1, FX1 + DT, FY0, FY1, FZ0 + 0.005, FZ_D - 0.025, pivot=pv)
-add_box(bm, FX1 - 0.003, FX1 + 0.002, FY0 + 0.01, FY1 - 0.01, FZ0 + 0.03, FZ_D - 0.04, pivot=pv, mi=2)
+add_box(bm, FX1 + 0.002, FX1 + DT, FY0, FY1, FZ0 + 0.005, FZ_D - 0.025, pivot=pv)
+add_box(bm, FX1 + 0.0, FX1 + 0.002, FY0 + 0.01, FY1 - 0.01, FZ0 + 0.03, FZ_D - 0.04, pivot=pv, mi=2)
 hz = FZ_D - 0.10
 add_box(bm, FX1 + DT + 0.035, FX1 + DT + 0.05, FY0 + 0.05, FY0 + 0.24, hz - 0.012, hz + 0.012, pivot=pv, mi=1)
 add_box(bm, FX1 + DT, FX1 + DT + 0.04, FY0 + 0.05, FY0 + 0.07, hz - 0.01, hz + 0.01, pivot=pv, mi=1)
 add_box(bm, FX1 + DT, FX1 + DT + 0.04, FY0 + 0.22, FY0 + 0.24, hz - 0.01, hz + 0.01, pivot=pv, mi=1)
 bm.normal_update()
 fz = make_obj("Freezer", bm, [M["mint"], M_chrome, M_gasket], pv)
-interactive(fz, "rot", "Freezer (puerta inferior)", axis="Z", angle=100)
+interactive(fz, "rot", "Freezer (puerta inferior)", axis="Z", angle=90)
 box("Heladera cartel", FX0 + 0.20, FX0 + 0.34, FY0 - 0.002, FY0, FH - 0.32, FH - 0.16, M["white"])   # papelito en el lateral
 
 # ------------------------------------------------------------------ mesa y sillas plegables (grupo "mesa")
 # Guardadas de pie en el hueco entre el lateral de la heladera (FY1) y el tabique del baño (como en f0112-f0124):
 # la mesa plegada contra el tabique y las dos sillas plegadas delante.
-PY = BATH_Y - 0.08                      # cara del tabique con el mural
-TY = PY - 0.30                          # (constante compartida) zona de guardado de mesa/sillas
-SOX1 = XR - 0.085; SOX0 = SOX1 - 0.78    # sillón (ver abajo)
-SOY1 = PY - 0.06; SOY0 = SOY1 - 1.50
+# PY (cara del tabique con el mural) y STORE_Y1 vienen de cocina.py. La hoja granero abierta barre y 3.73-3.80
+# hasta x=XL, así que mesa y sillas se guardan delante (y <= STORE_Y1).
+TY = STORE_Y1 - 0.20                    # (constante compartida) zona de guardado de mesa/sillas
+SOX0, SOX1 = SOFA_X0, SOFA_X1           # sillón (ver abajo)
+SOY0, SOY1 = SOFA_Y0, SOFA_Y1
+SY_ = STORE_Y1                          # cara trasera del paquete mesa plegada
 TOP = 0.60                              # tapa cuadrada de listones 60x60
 # mesa abierta: en el pasillo, delante del sillón
-MCX = (FX1 + DT + SOX0) / 2; MCY = (SOY0 + SOY1) / 2 - 0.05; MZ = 0.72
+MCX = (FX1 + DT + SOX0) / 2; MCY = STORE_Y1 - 0.63; MZ = 0.72   # en el pasillo frente al sillón; la silla del fondo queda delante de la hoja granero
 # mesa plegada (estado inicial): tapa vertical contra el tabique, apoyada en el piso, patas plegadas detrás
-pv = (XL + 0.10 + TOP / 2, PY - 0.05, 0.10 + TOP / 2)
+pv = (XL + 0.015 + TOP / 2, SY_ - 0.05, 0.10 + TOP / 2)
 bm = bmesh.new()
 n_sl = 9
 for k in range(n_sl):
     z0 = 0.10 + k * TOP / n_sl
-    add_box(bm, XL + 0.10, XL + 0.10 + TOP, PY - 0.06, PY - 0.04, z0 + 0.006, z0 + TOP / n_sl - 0.006, pivot=pv)
-for x0 in (XL + 0.12, XL + 0.10 + TOP - 0.06):      # travesaños bajo la tapa + patas plegadas
-    add_box(bm, x0, x0 + 0.04, PY - 0.04, PY - 0.02, 0.10, 0.10 + TOP, pivot=pv)
-    add_box(bm, x0 + 0.005, x0 + 0.035, PY - 0.02, PY + 0.0, 0.0, 0.10 + TOP + 0.08, pivot=pv)
+    add_box(bm, XL + 0.015, XL + 0.015 + TOP, SY_ - 0.06, SY_ - 0.04, z0 + 0.006, z0 + TOP / n_sl - 0.006, pivot=pv)
+for x0 in (XL + 0.035, XL + 0.015 + TOP - 0.06):      # travesaños bajo la tapa + patas plegadas
+    add_box(bm, x0, x0 + 0.04, SY_ - 0.04, SY_ - 0.02, 0.10, 0.10 + TOP, pivot=pv)
+    add_box(bm, x0 + 0.005, x0 + 0.035, SY_ - 0.02, SY_ + 0.0, 0.0, 0.10 + TOP + 0.08, pivot=pv)
 bm.normal_update()
 mesa = make_obj("Mesa plegable", bm, [M_slat], pv)
 interactive(mesa, "combo", "Mesa plegable", group="mesa", axis="X", angle=-90,
@@ -148,8 +157,8 @@ for dx in (-TOP / 2 + 0.05, TOP / 2 - 0.08):
     for s_ in (-1, 1):
         for t in range(6):
             yy = MCY + s_ * (0.24 - t * 0.04)
-            zz = t * (MZ - 0.06) / 6
-            legs.append((MCX + dx, MCX + dx + 0.03, yy - 0.025, yy + 0.025, zz, zz + (MZ - 0.06) / 6 + 0.01, 0))
+            zz = t * (MZ - 0.09) / 6
+            legs.append((MCX + dx, MCX + dx + 0.03, yy - 0.025, yy + 0.025, zz, zz + (MZ - 0.09) / 6 + 0.01, 0))
 legs.append((MCX - TOP / 2 + 0.05, MCX + TOP / 2 - 0.05, MCY - 0.015, MCY + 0.015, 0.30, 0.33, 0))
 mens = multi("Mensula mesa", legs, [M_slat])
 interactive(mens, "vis", "Mesa plegable", group="mesa", extra={"vis_state": "open"})
@@ -181,21 +190,21 @@ def chair_open(name, cx, cy, face):
 
 
 for j in range(2):
-    pl = chair_folded(f"Silla plegada {j + 1}", PY - 0.12 - j * 0.07)
+    pl = chair_folded(f"Silla plegada {j + 1}", SY_ - 0.13 - j * 0.07)
     interactive(pl, "vis", f"Silla plegable {j + 1}", group="mesa", extra={"vis_state": "closed"})
     face = 1 if j == 0 else -1
-    ab = chair_open(f"Silla abierta {j + 1}", MCX, MCY - face * (TOP / 2 + 0.22), face)
+    ab = chair_open(f"Silla abierta {j + 1}", MCX, MCY - face * (TOP / 2 + 0.12), face)
     interactive(ab, "vis", f"Silla plegable {j + 1}", group="mesa", extra={"vis_state": "open"})
 
 # ------------------------------------------------------------------ sillón turquesa tipo loveseat (pared derecha)
 # Respaldo contra la pared derecha, termina junto al tabique; apoyabrazos curvos tipo "tub", patas de madera abiertas.
-SZ_SEAT, SZ_BASE, SZ_BACK, SZ_ARM = 0.45, 0.17, 0.82, 0.64
+SZ_SEAT, SZ_BASE, SZ_BACK, SZ_ARM = 0.45, 0.17, 0.74, 0.62   # respaldo bajo tipo "tub": las pedadas pasan por encima
 AR = 0.08                                # radio de los rollos (apoyabrazos/respaldo)
 bm = bmesh.new()
 add_box(bm, SOX0 + 0.02, SOX1, SOY0, SOY1, SZ_BASE, SZ_SEAT - 0.10)                       # base
 add_box(bm, SOX0 + 0.04, SOX1 - 0.16, SOY0 + 0.15, SOY1 - 0.15, SZ_SEAT - 0.10, SZ_SEAT)   # almohadón de asiento
 add_box(bm, SOX1 - 0.18, SOX1, SOY0, SOY1, SZ_SEAT - 0.10, SZ_BACK - AR)                  # respaldo
-add_cyl(bm, "y", SOX1 - 0.09, SZ_BACK - AR, SOY0 + AR, SOY1 - AR, 0.09, (0, 0, 0), segs=12)
+add_cyl(bm, "y", SOX1 - 0.095, SZ_BACK - AR, SOY0 + AR, SOY1 - AR, 0.09, (0, 0, 0), segs=12)
 for (y0, y1) in [(SOY0, SOY0 + 0.15), (SOY1 - 0.15, SOY1)]:                               # apoyabrazos
     add_box(bm, SOX0 + 0.02, SOX1, y0, y1, SZ_SEAT - 0.10, SZ_ARM - AR)
     add_cyl(bm, "x", (y0 + y1) / 2, SZ_ARM - AR, SOX0 + 0.02, SOX1 - 0.09, 0.075, (0, 0, 0), segs=12)
@@ -208,15 +217,17 @@ for (x, y, sx, sy) in [(SOX0 + 0.10, SOY0 + 0.10, -1, -1), (SOX0 + 0.10, SOY1 - 
     p = cone("Pata sillon", x + sx * 0.02, y + sy * 0.02, 0.0, SZ_BASE, 0.012, 0.022, M_leg, verts=8)
     p.rotation_euler = (math.radians(-sy * 10), math.radians(sx * 10), 0)
 # almohadones: 1 blanco liso al fondo + 2 estampados con elefante (textura real f0106), apoyados en el respaldo
-for k, (y0, y1, m_) in enumerate([(SOY1 - 0.62, SOY1 - 0.16, M["white"]), (SOY1 - 0.98, SOY1 - 0.52, M_pillow),
-                                  (SOY0 + 0.16, SOY0 + 0.62, M_pillow)]):
+_pw = (SOY1 - SOY0 - 0.30 - 0.04) / 3     # 3 almohadones entre los apoyabrazos, sin superponerse
+for k, (y0, y1, m_) in enumerate([(SOY1 - 0.16 - _pw, SOY1 - 0.16, M["white"]),
+                                  (SOY1 - 0.18 - 2 * _pw, SOY1 - 0.18 - _pw, M_pillow),
+                                  (SOY0 + 0.16, SOY0 + 0.16 + _pw, M_pillow)]):
     xb = SOX1 - 0.20 - k * 0.015
-    box(f"Almohadon {k + 1}", xb - 0.14, xb, y0, y1, SZ_SEAT, SZ_SEAT + 0.44, M["white"])
+    box(f"Almohadon {k + 1}", xb - 0.14, xb, y0, y1, SZ_SEAT + 0.012, SZ_SEAT + 0.43, M["white"])
     if m_ is M_pillow:
         decal(f"Almohadon {k + 1} estampado", "x", xb - 0.141, y1 - 0.02, y0 + 0.02, SZ_SEAT + 0.02, SZ_SEAT + 0.42, M_pillow, facing=-1)
 # manta de piel blanca sobre el apoyabrazos del fondo (f0171)
-box("Manta sillon", SOX0 + 0.10, SOX1 - 0.02, SOY1 - 0.20, SOY1 + 0.01, SZ_ARM - 0.02, SZ_ARM + 0.10, M_fleece)
-box("Manta sillon caida", SOX1 - 0.20, SOX1 - 0.02, SOY1 - 0.45, SOY1 - 0.15, SZ_BACK - 0.10, SZ_BACK + 0.06, M_fleece)
+box("Manta sillon", SOX0 + 0.10, SOX1 - 0.19, SOY1 - 0.15, SOY1, SZ_ARM + 0.002, SZ_ARM + 0.06, M_fleece)
+box("Manta sillon caida", SOX1 - 0.17, SOX1 - 0.02, SOY1 - 0.15, SOY1, SZ_BACK + 0.02, SZ_BACK + 0.07, M_fleece)
 
 # ------------------------------------------------------------------ aire acondicionado split (pared izquierda, alto)
 SPZ1 = EAVE - 0.06
