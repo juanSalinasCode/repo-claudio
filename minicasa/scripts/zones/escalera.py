@@ -1,20 +1,86 @@
 # Zona: escalera. Se ejecuta en el espacio de nombres compartido de core.py (ver build.py).
 # =================================================================== ESCALERA ESCONDIDA
+# Como en el video (f0103-f0109 plegada, f0180-f0203 desplegada): sobre el sillón, en la pared derecha, hay un panel
+# de pino en diagonal con 8 pedadas plegadas hacia ABAJO (rectángulos verticales en diente de sierra, con una ranura
+# oscura arriba de cada uno) y un larguero exterior en diagonal debajo de ellas. Al desplegar, cada pedada gira 90°
+# sobre su bisagra (canto de la pared, arriba) y queda horizontal; el larguero sube y sale de la pared
+# (paralelogramo) y queda como zanca/baranda exterior de una escalera tipo "molinero" que llega al altillo.
 CUR[0] = "Escalera"
-# panel con ranuras en la pared derecha (sobre el sillón)
-box("Panel escalera", XR - 0.03, XR - 0.005, 2.95, BATH_Y - 0.08, 0.90, LOFT_Z, M["pine"])
-STEPS = 6
-for i in range(STEPS):
-    y = 3.02 + i * 0.22
-    z = 0.95 + i * 0.20   # bisagra de cada escalón
-    bm = bmesh.new(); pv = (XR - 0.035, y, z)
-    # plegado: vertical (sobresale hacia arriba), al desplegar gira -90° en Y => horizontal hacia -x
-    add_box(bm, XR - 0.065, XR - 0.035, y, y + 0.38, z, z + 0.26, pivot=pv)
+M_stair = mat("Pino escalera", (0.51, 0.32, 0.17), rough=0.6)
+M_slot = mat("Ranura oscura", (0.03, 0.02, 0.015), rough=0.9)
+
+STEPS = 8
+ST_TOP = LOFT_Z + 0.08                  # piso terminado del altillo
+ST_RISE = ST_TOP / (STEPS + 1)          # ~0.24
+ST_D = 0.40                             # profundidad de la pedada (sale de la pared hacia -x)
+ST_TH = 0.035                           # espesor de la pedada
+ST_Y1 = BATH_Y - 0.10                   # borde del altillo (llegada)
+# avance por escalón: las 3 pedadas bajas quedan delante del sillón (f0186/f0189), el resto pasa por encima del respaldo
+_soy0 = globals().get("SOY0", ST_Y1 - 1.40)
+ST_RUN = min(0.26, max(0.19, (ST_Y1 - 0.05 - _soy0 + 0.24) / (STEPS - 2)))
+ST_TW = ST_RUN - 0.02                   # largo de cada pedada (en y); plegadas quedan separadas por la ranura
+ST_X = XR - 0.012                       # plano de las bisagras (sobre el panel de pino)
+ST_Y = [ST_Y1 - (STEPS - i) * ST_RUN - 0.05 for i in range(STEPS)]   # inicio (y) de cada pedada
+ST_Z = [ST_RISE * (i + 1) for i in range(STEPS)]                    # nivel superior de cada pedada
+
+
+def _band(name, x0, x1, pts_yz, m_):
+    """Polígono en el plano YZ extruido en x (de x0 a x1)."""
+    bm = bmesh.new()
+    a = [bm.verts.new((x0, y, z)) for y, z in pts_yz]
+    b = [bm.verts.new((x1, y, z)) for y, z in pts_yz]
+    bm.faces.new(a); bm.faces.new(b[::-1])
+    n = len(pts_yz)
+    for i in range(n):
+        j = (i + 1) % n
+        bm.faces.new([a[i], a[j], b[j], b[i]])
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
     bm.normal_update()
-    st = make_obj(f"Escalon oculto {i + 1}", bm, [M["pine"]], pv)
-    interactive(st, "rot", "Escalera escondida", group="escalera", axis="Y", angle=-90)
+    return bm
+
+
+# línea de bisagras: z = ST_Z[i] en y = ST_Y[i] + ST_TW / 2
+_slope = ST_RISE / ST_RUN
+_y0c = ST_Y[0] + ST_TW / 2
+def _hinge_z(y):
+    return ST_Z[0] + (y - _y0c) * _slope
+def _y_at(z, off):
+    return _y0c + (z - off - ST_Z[0]) / _slope
+
+# panel de pino fijo en la pared (fondo claro donde cuelgan las pedadas plegadas)
+_up, _dn = 0.12, ST_D + 0.30
+zt = ST_TOP + 0.10
+pts = [(_y_at(0.0, _up), 0.0), (_y_at(0.0, -_dn), 0.0), (ST_Y1, _hinge_z(ST_Y1) - _dn), (ST_Y1, _hinge_z(ST_Y1) + _up)]
+bm = _band("Panel escalera", XR - 0.012, XR - 0.002, pts, M_stair)
+make_obj("Panel escalera", bm, [M_stair])
+
+for i in range(STEPS):
+    y, zt_ = ST_Y[i], ST_Z[i]
+    pv = (ST_X, y + ST_TW / 2, zt_ - ST_TH)
+    bm = bmesh.new()
+    # plegada: cuelga hacia abajo desde la bisagra, apoyada contra el panel
+    add_box(bm, ST_X - ST_TH, ST_X, y, y + ST_TW, zt_ - ST_TH - ST_D, zt_ - ST_TH, pivot=pv)
+    bm.normal_update()
+    st = make_obj(f"Escalon oculto {i + 1}", bm, [M_stair], pv)
+    # giro +90° en Y: la pedada pasa de colgar (-z) a horizontal hacia el pasillo (-x)
+    interactive(st, "rot", "Escalera escondida", group="escalera", axis="Y", angle=90)
+    # ranura oscura sobre cada pedada plegada (la "ranura" que se ve en la pared)
+    box(f"Ranura escalon {i + 1}", XR - 0.017, XR - 0.012, y, y + ST_TW, zt_ - ST_TH, zt_ - ST_TH + 0.012, M_slot)
+
+# larguero exterior: desplegado queda a ST_D de la pared, bajo los cantos exteriores de las pedadas;
+# plegado (estado inicial) está contra el panel y ST_D más abajo -> slide (+ST_D hacia la pared, -ST_D en z) invertido.
+_lt, _lb = 0.02 - ST_TH, -0.20          # bordes superior/inferior del larguero respecto de la línea de bisagras
+ze = ST_TOP + 0.05                      # remata a la altura del piso del altillo
+pts = [(_y_at(0.0, _lt), 0.0), (_y_at(0.0, _lb), 0.0), (_y_at(ze, _lb), ze), (_y_at(ze, _lt), ze)]
+xo = ST_X - ST_TH - 0.035
+bm = _band("Larguero escalera", xo, xo + 0.035, [(y, z - ST_D) for y, z in pts], M_stair)
+lpv = (xo, (pts[0][0] + pts[2][0]) / 2, 0.0)
+bmesh.ops.translate(bm, verts=bm.verts, vec=Vector((0, -lpv[1], 0)))
+lar = make_obj("Larguero escalera", bm, [M_stair], (0, lpv[1], 0))
+lar.location = (0, lpv[1], 0)
+interactive(lar, "slide", "Escalera escondida", group="escalera", vec=(-(ST_D - ST_TH), 0, ST_D))
+
 # acceso al altillo (zona clickeable invisible sobre el último escalón)
-acc = box("Subir al altillo", XR - 0.45, XR - 0.05, 4.05, BATH_Y - 0.10, 1.95, 2.40, M["glass"])
+acc = box("Subir al altillo", XR - ST_D - 0.05, XR - 0.05, ST_Y[-2], ST_Y1, ST_Z[-2], ST_TOP + 0.35, M["glass"])
 interactive(acc, "loft", "Subir / bajar del altillo", group="altillo", extra={"needs": "escalera"})
 acc.hide_render = True
-
