@@ -111,7 +111,7 @@ const player = { pos: new THREE.Vector3(), yaw: Math.PI, pitch: -0.05, vy: 0, in
 const EYE = 1.6, LOFT_EYE = 0.95, RADIUS = 0.22, STEP = 0.32;
 
 const loader = new GLTFLoader();
-loader.load('minicasa.json', (gltf) => {
+function onModel(gltf) {
   const root = gltf.scene;
   scene.add(root);
   root.traverse((o) => {
@@ -147,11 +147,33 @@ loader.load('minicasa.json', (gltf) => {
   goTo('out');
   document.getElementById('load').hidden = true;
   setLights(true);
-}, (e) => {
-  if (e.total) document.querySelector('#bar i').style.width = (100 * e.loaded / e.total).toFixed(0) + '%';
-}, (err) => {
-  document.getElementById('loadmsg').textContent = 'No se pudo cargar el modelo (' + (err.message || err) + '). Recargá la página.';
-});
+}
+function loadFail(err) {
+  document.getElementById('loadmsg').textContent = 'No se pudo cargar el modelo (' + (err && err.message || err) + '). Recargá la página.';
+}
+// El visor bloquea fetch() de URLs data:/blob:, así que armamos un GLB en memoria
+// y forzamos que las texturas se carguen como <img> (sin createImageBitmap).
+async function loadModel() {
+  const bar = document.querySelector('#bar i');
+  const res = await fetch('minicasa.json');
+  const total = +res.headers.get('content-length') || 2.1e6;
+  const reader = res.body.getReader(); const chunks = []; let got = 0;
+  for (;;) { const { done, value } = await reader.read(); if (done) break; chunks.push(value); got += value.length; bar.style.width = Math.min(95, 100 * got / total).toFixed(0) + '%'; }
+  const json = JSON.parse(new TextDecoder().decode(await new Blob(chunks).arrayBuffer()));
+  const uri = json.buffers[0].uri; delete json.buffers[0].uri;
+  const bin = Uint8Array.from(atob(uri.slice(uri.indexOf(',') + 1)), c => c.charCodeAt(0));
+  const enc = new TextEncoder().encode(JSON.stringify(json));
+  const jlen = Math.ceil(enc.length / 4) * 4, blen = Math.ceil(bin.length / 4) * 4;
+  const glb = new ArrayBuffer(12 + 8 + jlen + 8 + blen); const dv = new DataView(glb); const u8 = new Uint8Array(glb);
+  dv.setUint32(0, 0x46546C67, true); dv.setUint32(4, 2, true); dv.setUint32(8, glb.byteLength, true);
+  dv.setUint32(12, jlen, true); dv.setUint32(16, 0x4E4F534A, true); u8.fill(0x20, 20, 20 + jlen); u8.set(enc, 20);
+  dv.setUint32(20 + jlen, blen, true); dv.setUint32(24 + jlen, 0x004E4942, true); u8.set(bin, 28 + jlen);
+  const cib = window.createImageBitmap;
+  try { window.createImageBitmap = undefined; } catch (e) {}
+  try { loader.parse(glb, '', onModel, loadFail); }
+  finally { try { window.createImageBitmap = cib; } catch (e) {} }
+}
+loadModel().catch(loadFail);
 
 // ---------------------------------------------------------------- interacción
 function findInteractive(o) {
