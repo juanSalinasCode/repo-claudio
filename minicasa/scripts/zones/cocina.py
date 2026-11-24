@@ -46,29 +46,72 @@ MC = dict(
     block=mat("Taco madera", _lin(220, 190, 150), rough=0.6),
 )
 
+# --------------------------------------------------------------- PRESUPUESTO DE LAS PAREDES (compartido)
+# Ver audit/planta.md. Medido con la nube COLMAP alineada (work/medidas) y rayos de las cámaras de audit/cameras.json.
+# Pared -x (mirando al fondo, izquierda):
+#   0 .. KY0            hueco de escoba (f0034)
+#   KY0 .. KY1          bajo mesada + mesada (bacha bajo la ventana LEFT_WINS 1.51-2.21)
+#   FRIDGE_Y0 .. FRIDGE_Y1  heladera (f0096: laterales a y 2.25 / 2.79; frente x ~ -0.36)
+#   FRIDGE_Y1 .. STORE_Y1   paso + mesa/sillas plegadas (delante del barrido de la puerta granero)
+#   STORE_Y1 .. PY      puerta granero (y 3.73-3.80, corre hacia -x) + tabique (cara living PY)
+# Pared +x (derecha):
+#   0 .. CUBE_Y0        barrido de la puerta de entrada
+#   CUBE_Y0 .. CUBE_Y1  mueble negro de cubos (nube: frente x 0.62-0.67, y 0.72-1.56; anafe hasta ~1.65 en f0091)
+#   CUBE_Y1 .. SOFA_Y0  pie de la escalera (larguero apoya en ~1.96-2.04), bajo la ventana RIGHT_WINS 1.50-2.21
+#   SOFA_Y0 .. SOFA_Y1  sillón (pata delantera en y 2.55, x 0.31 en f0104; nube 2.6-3.8)
+#   STAIR_Y0 .. STAIR_Y1  escalera escondida sobre el sillón, llega al altillo junto al tabique
+PY = BATH_Y - 0.08              # cara living del tabique (3.86)
+KY0 = 0.33
+KY1 = 2.20
+FRIDGE_Y0 = KY1 + 0.03
+FRIDGE_Y1 = FRIDGE_Y0 + 0.56
+STORE_Y1 = PY - 0.15            # la hoja granero abierta ocupa y 3.73-3.80 hasta x=XL
+CUBE_Y0, CUBE_Y1 = 0.80, 1.62
+SOFA_Y0, SOFA_Y1 = 2.55, PY - 0.05
+SOFA_X0, SOFA_X1 = XR - 0.70, XR - 0.10   # 0.62 de fondo; separado de la pared por el panel/pedadas plegadas
+STAIR_Y1 = PY - 0.02            # borde del altillo (llegada)
+
 # --------------------------------------------------------------- medidas de la cocina
 SINK_WIN = max(LEFT_WINS, key=lambda w: w[1] - w[0])     # la ventana grande (sobre la bacha)
 CD = 0.60                       # profundidad del bajo mesada (sin la mesada)
 CZ = 0.91                       # altura de la mesada terminada
 CT = 0.04                       # espesor de la mesada (tabla maciza)
 TOE = 0.09                      # zócalo
-KY0 = 0.33                      # hueco de escoba entre la pared del frente y el mueble (f0034)
-# módulos desde el frente: cajonera de 3 (la que abre el presentador), puerta(s), puerta doble bajo la bacha,
-# cajonera trasera de 3. La bacha va bajo la mitad delantera de la ventana grande (canilla junto al marco, f0066).
+# módulos desde el frente: cajonera de 3 (la que abre el presentador), puerta doble, puerta doble bajo la bacha.
+# La bacha va centrada bajo la ventana (canilla junto al marco delantero, f0066).
 SINK_Y = SINK_WIN[0] + 0.32
 MOD_A = 0.45
 YA1 = KY0 + MOD_A
-YB0 = SINK_Y - 0.40             # puerta doble bajo la bacha
-YB1 = SINK_Y + 0.40
-KY1 = YB1 + 0.55
+YB1 = KY1
+YB0 = SINK_Y - (YB1 - SINK_Y)   # puerta doble simétrica bajo la bacha
 FX = XL + CD                    # plano de los frentes
 CY_CTR = XL + CD / 2
+PT = 0.018                      # espesor de los tableros del casco
 
-# casco (oscuro, se ve en las juntas) + zócalo retirado
-box("Bajo mesada", XL, FX - 0.02, KY0, KY1, TOE, CZ - CT, MC["wood_dark"])
-box("Zocalo cocina", XL, FX - 0.07, KY0 + 0.02, KY1 - 0.02, 0.0, TOE, MC["wood_dark"])
-# mesada maciza con canto visible y pequeño vuelo
-box("Mesada", XL, FX + 0.035, KY0 - 0.01, KY1 + 0.01, CZ - CT, CZ, MC["counter"], tile=0.9)
+# casco (oscuro) como CARCASA: fondo, laterales, base, divisores y travesaños; hueco en cajonera y bajo la bacha
+CX1 = FX - 0.021                # cara frontal del casco (los frentes van de FX-0.02 a FX)
+casco = [(XL, CX1, KY0, KY1, TOE, TOE + PT, 0),                                # base
+         (XL, XL + PT, KY0, KY1, TOE + PT, CZ - CT, 0),                        # fondo
+         (XL + PT, CX1, KY0, KY0 + PT, TOE + PT, CZ - CT, 0),                  # lateral frente
+         (XL + PT, CX1, KY1 - PT, KY1, TOE + PT, CZ - CT, 0),                  # lateral fondo
+         (XL + PT, CX1, YA1 - PT / 2, YA1 + PT / 2, TOE + PT, CZ - CT, 0),     # divisor cajonera | puertas
+         (XL + PT, CX1, YB0 - PT / 2, YB0 + PT / 2, TOE + PT, CZ - CT, 0),     # divisor puertas | bacha
+         (CX1 - 0.08, CX1, KY0 + PT, KY1 - PT, CZ - CT - PT, CZ - CT, 0),      # travesaño frontal superior
+         (XL + PT, XL + 0.08, KY0 + PT, KY1 - PT, CZ - CT - PT, CZ - CT, 0),   # travesaño trasero superior
+         (XL + PT, CX1, YA1 + PT / 2, YB0 - PT / 2, 0.45, 0.45 + PT, 0)]       # estante tras las puertas
+multi("Bajo mesada", casco, [MC["wood_dark"]])
+box("Zocalo cocina", XL + PT, FX - 0.07, KY0 + 0.02, KY1 - 0.02, 0.0, TOE, MC["wood_dark"])
+
+# bacha (medidas necesarias para el hueco de la mesada)
+SW, SD = 0.54, 0.38          # largo (y) y ancho (x) de la bacha
+sx0, sx1 = XL + 0.10, XL + 0.10 + SD
+sy0, sy1 = SINK_Y - SW / 2, SINK_Y + SW / 2
+# mesada maciza con canto visible y pequeño vuelo, con el hueco de la bacha (2 mm de luz)
+_mx0, _mx1, _my0, _my1 = XL, FX + 0.035, KY0 - 0.01, KY1 + 0.01
+_h = 0.002
+multi("Mesada", [(_mx0, _mx1, _my0, sy0 - _h, CZ - CT, CZ, 0), (_mx0, _mx1, sy1 + _h, _my1, CZ - CT, CZ, 0),
+                 (_mx0, sx0 - _h, sy0 - _h, sy1 + _h, CZ - CT, CZ, 0), (sx1 + _h, _mx1, sy0 - _h, sy1 + _h, CZ - CT, CZ, 0)],
+      [MC["counter"]], tile=0.9)
 
 def pull_h(parts, x, yc, zc, length, mi=1):
     """Tirador arco horizontal (en cajones): barra + dos patas."""
@@ -103,7 +146,7 @@ for i, (z0, z1) in enumerate(dz):
     caj = make_obj(f"Cajon {i + 1}", bm, [MC["wood"], MC["pull"]], pv, 0.6)
     interactive(caj, "slide", f"Cajón {i + 1} de la cocina", vec=(0.40, 0, 0))
 
-# frentes fijos: puerta doble bajo la bacha + cajonera trasera de 3 cajones iguales
+# frentes fijos: puerta(s) intermedias + puerta doble bajo la bacha
 parts = []
 if YB0 - YA1 > 0.08:            # puerta(s) entre la cajonera y la bacha
     nd = 2 if YB0 - YA1 > 0.55 else 1
@@ -117,34 +160,26 @@ ym = (YB0 + YB1) / 2
 parts += [(FX - 0.02, FX, YB0 + G, ym - G, FZ0, FZ1, 0), (FX - 0.02, FX, ym + G, YB1 - G, FZ0, FZ1, 0)]
 pull_v(parts, FX, ym - 0.04, FZ1 - 0.13, 0.12)
 pull_v(parts, FX, ym + 0.04, FZ1 - 0.13, 0.12)
-hz = (FZ1 - FZ0) / 3
-for k in range(3):
-    z0 = FZ0 + k * hz
-    parts.append((FX - 0.02, FX, YB1 + G, KY1 - G, z0 + G, z0 + hz - G, 0))
-    pull_h(parts, FX, (YB1 + KY1) / 2, z0 + hz - 0.06, 0.18)
 multi("Frentes cocina", parts, [MC["wood"], MC["pull"]], tile=0.6)
 # panel lateral visible junto a la heladera y del lado del frente
-box("Lateral mueble frente", XL, FX, KY0 - 0.005, KY0, TOE, CZ - CT, MC["wood"], tile=0.6)
-box("Lateral mueble fondo", XL, FX, KY1, KY1 + 0.005, TOE, CZ - CT, MC["wood"], tile=0.6)
+box("Lateral mueble frente", XL, FX, KY0 - 0.006, KY0 - 0.001, 0.0, CZ - CT, MC["wood"], tile=0.6)
+box("Lateral mueble fondo", XL, FX, KY1 + 0.001, KY1 + 0.006, 0.0, CZ - CT, MC["wood"], tile=0.6)
 
 # ------------------------------------------------------------- bacha bajo mesada + escurridor de varillas
-SW, SD = 0.54, 0.40          # largo (y) y ancho (x) de la bacha
-sx0, sx1 = XL + 0.10, XL + 0.10 + SD
-sy0, sy1 = SINK_Y - SW / 2, SINK_Y + SW / 2
 multi("Bacha", [(sx0, sx1, sy0, sy1, CZ - 0.22, CZ - 0.20, 1),
-                (sx0, sx0 + 0.01, sy0, sy1, CZ - 0.22, CZ + 0.001, 0), (sx1 - 0.01, sx1, sy0, sy1, CZ - 0.22, CZ + 0.001, 0),
-                (sx0, sx1, sy0, sy0 + 0.01, CZ - 0.22, CZ + 0.001, 0), (sx0, sx1, sy1 - 0.01, sy1, CZ - 0.22, CZ + 0.001, 0)],
+                (sx0, sx0 + 0.01, sy0, sy1, CZ - 0.20, CZ + 0.001, 0), (sx1 - 0.01, sx1, sy0, sy1, CZ - 0.20, CZ + 0.001, 0),
+                (sx0 + 0.01, sx1 - 0.01, sy0, sy0 + 0.01, CZ - 0.20, CZ + 0.001, 0), (sx0 + 0.01, sx1 - 0.01, sy1 - 0.01, sy1, CZ - 0.20, CZ + 0.001, 0)],
       [MC["sink"], MC["sink_in"]])
-box("Bacha hueco", sx0 + 0.01, sx1 - 0.01, sy0 + 0.01, sy1 - 0.01, CZ - 0.20, CZ + 0.0015, MC["sink_in"])
 # escurridor enrollable: varillas a lo ancho (x), apoyado sobre la mitad trasera de la bacha y la mesada
-RY0, RY1 = SINK_Y - 0.05, SINK_Y + 0.45
+RY1 = KY1 - 0.03
+RY0 = RY1 - 0.42
 nr = 18
 rparts = [(sx0 - 0.03, sx1 + 0.03, RY0 + (RY1 - RY0) * k / (nr - 1) - 0.005, RY0 + (RY1 - RY0) * k / (nr - 1) + 0.005,
            CZ + 0.002, CZ + 0.012, 0) for k in range(nr)]
 rparts += [(sx0 - 0.04, sx0 - 0.02, RY0 - 0.01, RY1 + 0.01, CZ + 0.001, CZ + 0.010, 1),
            (sx1 + 0.02, sx1 + 0.04, RY0 - 0.01, RY1 + 0.01, CZ + 0.001, CZ + 0.010, 1)]
 multi("Escurridor", rparts, [MC["rack"], MC["rack_edge"]])
-box("Repasador", sx0 + 0.02, sx0 + 0.20, RY1 + 0.03, RY1 + 0.16, CZ, CZ + 0.04, MC["towel"])
+box("Repasador", sx1 + 0.04, sx1 + 0.12, sy0 - 0.18, sy0 - 0.04, CZ, CZ + 0.03, MC["towel"])
 # canilla negra tipo cuello de ganso, contra la pared delante de la bacha (f0066)
 CANY = sy0 + 0.06
 canilla = multi("Canilla cocina", [(-0.025, 0.025, -0.025, 0.025, 0.0, 0.03),         # base
@@ -159,9 +194,9 @@ agua_c = cyl("Agua cocina", XL + 0.06 + 0.185, CANY + 0.10, CZ - 0.20, CZ + 0.28
 agua_c["water_of"] = "agua_cocina"
 # botellas de jabón junto a la canilla
 for j, (dy, h) in enumerate([(0.17, 0.20), (0.24, 0.22), (0.31, 0.16)]):
-    cyl(f"Jabon {j}", XL + 0.07, sy0 - dy + 0.30, CZ, CZ + h, 0.03, MC["soap"], verts=10)
+    cyl(f"Jabon {j}", XL + 0.05, sy0 - dy + 0.10, CZ, CZ + h, 0.03, MC["soap"], verts=10)
 # taco de cuchillos al fondo de la mesada (f0066)
-kb = YB1 + 0.30
+kb = YA1 + 0.14
 box("Taco cuchillos", XL + 0.05, XL + 0.20, kb, kb + 0.12, CZ, CZ + 0.20, MC["block"])
 multi("Cuchillos", [(XL + 0.06 + 0.025 * i, XL + 0.075 + 0.025 * i, kb + 0.02 + 0.02 * (i % 3), kb + 0.04 + 0.02 * (i % 3),
                      CZ + 0.20, CZ + 0.30, 0) for i in range(5)], [MC["knife"]])
@@ -221,36 +256,36 @@ for o in [bpy.data.objects["Alfombra entrada"]]:
 # ------------------------------------------------------------- pared derecha (+x): mueble negro de cubos con anafe
 # 2 columnas x 3 filas de melamina negra, tapa con manta menta; anafe doble atrás y cafetera adelante (f0038/f0040).
 RW_SMALL = min(RIGHT_WINS, key=lambda w: w[0])          # ventana angosta cerca de la puerta
-CBD, CBH, CBW = 0.32, 0.86, 0.72
-SY0 = RW_SMALL[1] - 0.05
-SY1 = SY0 + CBW
+CBD, CBH = 0.32, 0.86
+SY0, SY1 = CUBE_Y0, CUBE_Y1      # presupuesto de la pared +x
+CBW = SY1 - SY0
 SX1, SX0 = XR - 0.01, XR - 0.01 - CBD
 th = 0.018
 cp = [(SX0, SX1, SY0, SY1, 0.0, th, 0), (SX0, SX1, SY0, SY1, CBH - th, CBH, 0),
-      (SX0, SX1, SY0, SY0 + th, 0, CBH, 0), (SX0, SX1, SY1 - th, SY1, 0, CBH, 0),
-      (SX0, SX1, (SY0 + SY1) / 2 - th / 2, (SY0 + SY1) / 2 + th / 2, 0, CBH, 0),
-      (SX1 - 0.006, SX1, SY0, SY1, 0, CBH, 0)]
-for k in (1, 2):
-    z = k * CBH / 3
-    cp.append((SX0, SX1, SY0, SY1, z - th / 2, z + th / 2, 0))
-multi("Mueble cubos", cp, [MC["cube"]])
+      (SX0, SX1, SY0, SY0 + th, th, CBH - th, 0), (SX0, SX1, SY1 - th, SY1, th, CBH - th, 0),
+      (SX0, SX1 - 0.006, (SY0 + SY1) / 2 - th / 2, (SY0 + SY1) / 2 + th / 2, th, CBH - th, 0),
+      (SX1 - 0.006, SX1, SY0 + th, SY1 - th, th, CBH - th, 0)]
 cw = (CBW - 3 * th) / 2
 ch = (CBH - 4 * th) / 3
+for k in (1, 2):
+    z = th + k * ch + (k - 1) * th
+    cp.append((SX0, SX1 - 0.006, SY0 + th, SY1 - th, z, z + th, 0))
+multi("Mueble cubos", cp, [MC["cube"]])
 def cubby(col, row):
     y0 = SY0 + th + col * (cw + th); z0 = th + row * (ch + th)
     return y0, y0 + cw, z0, z0 + ch
 # canastos de tela negros (columna delantera) y cosas en la trasera
 for row in range(3):
     y0, y1, z0, z1 = cubby(0, row)
-    box(f"Canasto {row}", SX0 + 0.01, SX1 - 0.02, y0 + 0.01, y1 - 0.01, z0, z1 - 0.01, MC["bin"])
-    cyl(f"Canasto ojal {row}", SX0 + 0.005, (y0 + y1) / 2, (z0 + z1) / 2 + 0.06, (z0 + z1) / 2 + 0.07, 0.018,
+    box(f"Canasto {row}", SX0 + 0.012, SX1 - 0.02, y0 + 0.01, y1 - 0.01, z0 + 0.001, z1 - 0.02, MC["bin"])
+    cyl(f"Canasto ojal {row}", SX0 + 0.006, (y0 + y1) / 2, (z0 + z1) / 2 + 0.06, (z0 + z1) / 2 + 0.07, 0.018,
         M["steel"], verts=8, axis="X")
 y0, y1, z0, z1 = cubby(1, 2)
 box("Caja roja", SX0 + 0.06, SX1 - 0.05, y0 + 0.03, y1 - 0.05, z0, z0 + 0.06, MC["red"])
 y0, y1, z0, z1 = cubby(1, 1)
 box("Manta azul", SX0 + 0.02, SX1 - 0.03, y0 + 0.01, y1 - 0.01, z0, z0 + 0.17, MC["blue"])
 y0, y1, z0, z1 = cubby(1, 0)
-box("Canasto bajo", SX0 + 0.01, SX1 - 0.02, y0 + 0.01, y1 - 0.01, z0, z1 - 0.01, MC["bin"])
+box("Canasto bajo", SX0 + 0.012, SX1 - 0.02, y0 + 0.01, y1 - 0.01, z0 + 0.001, z1 - 0.02, MC["bin"])
 box("Tapa menta", SX0 - 0.005, SX1, SY0, SY1, CBH, CBH + 0.006, MC["mint_top"])
 # anafe eléctrico doble (atrás, y mayor)
 ay = SY1 - 0.20
@@ -287,7 +322,7 @@ def hexring(name, xw, yc, zc, r, wdt, depth, m_):
             bmesh.ops.translate(bm, verts=vs, vec=(xw - depth / 2, (y_a + y_b) / 2, (z_a + z_b) / 2))
     bm.normal_update()
     return make_obj(name, bm, [m_])
-hexring("Mandala", XR - 0.002, RW_SMALL[1] + 0.12, 1.90, 0.16, 0.022, 0.015, MC["mandala"])
+hexring("Mandala", XR - 0.002, SY0 + 0.20, 1.86, 0.16, 0.022, 0.015, MC["mandala"])
 # repisa de la ventana angosta (con florero)
 box("Repisa ventana", XR - 0.14, XR, RW_SMALL[0] - 0.08, RW_SMALL[1] + 0.08, RW_SMALL[2] - 0.08, RW_SMALL[2] - 0.05, M["pine"])
 cyl("Florero", XR - 0.07, RW_SMALL[0] + 0.05, RW_SMALL[2] - 0.05, RW_SMALL[2] + 0.18, 0.03, mat("Florero vidrio", _lin(120, 140, 170), alpha=0.6), verts=8)
@@ -298,7 +333,7 @@ if _rw:
     box("Cartel LIFE", XR - 0.10, XR - 0.09, RW_BIG[0] + 0.12, RW_BIG[0] + 0.40, RW_BIG[2] - 0.05, RW_BIG[2] + 0.30, MC["life"])
 else:
     RW_BIG = RW_SMALL
-    box("Cartel LIFE", XR - 0.10, XR - 0.09, RW_SMALL[1] + 0.40, RW_SMALL[1] + 0.68, 1.45, 1.80, MC["life"])
+    box("Cartel LIFE", XR - 0.10, XR - 0.09, RW_SMALL[1] - 0.38, RW_SMALL[1] - 0.10, RW_SMALL[2] - 0.05, RW_SMALL[2] + 0.30, MC["life"])
 # estante alto sobre la entrada (pared derecha, bajo el alero)
 box("Estante alto entrada", XR - 0.34, XR, 0.0, SY0 + 0.20, 2.10, 2.13, M["plywood"], tile=1.0)
 box("Estante alto frente", XR - 0.36, XR - 0.34, 0.0, SY0 + 0.20, 2.10, 2.22, M["plywood"], tile=1.0)

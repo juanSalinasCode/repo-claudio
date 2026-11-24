@@ -17,18 +17,25 @@ PL = dict(
 )
 
 # --- contramarco blanco exterior + revestimiento del vano + umbral
+#     Pared de espesor T: el contramarco forra el vano (jambas + dintel dentro del hueco) y los tapajuntas
+#     apoyan en las caras exterior (y=-T) e interior (y=0), siempre con 1 mm de luz: nada atraviesa la pared.
+#     A la izquierda (d0) la ventana del frente está a 8,5 cm: tapajuntas angostos de ese lado.
+_e, _ct = 0.001, 0.015
+_CL_EXT, _CL_INT, _CI = 0.012, 0.022, 0.035           # anchos: tapajunta izq. exterior / izq. interior / interior
+_UZ = 0.012                                          # alto del umbral (las jambas apoyan encima)
 multi("Marco puerta", [
-    (d0 - CAS, d0, -T - 0.025, -T + 0.001, dz0, dz1 + CAS), (d1, d1 + CAS, -T - 0.025, -T + 0.001, dz0, dz1 + CAS),
-    (d0 - CAS, d1 + CAS, -T - 0.025, -T + 0.001, dz1, dz1 + CAS),
-    (d0, d0 + 0.015, -T, 0.0, dz0, dz1), (d1 - 0.015, d1, -T, 0.0, dz0, dz1), (d0, d1, -T, 0.0, dz1 - 0.015, dz1),
-    (d0 - 0.05, d0, 0.0, 0.012, dz0, dz1 + 0.05), (d1, d1 + 0.05, 0.0, 0.012, dz0, dz1 + 0.05),   # marco interior
-    (d0 - 0.05, d1 + 0.05, 0.0, 0.012, dz1, dz1 + 0.05)], [M["trim"]])
-box("Umbral", d0 - 0.02, d1 + 0.02, -T - 0.04, 0.0, -0.012, 0.012, M["gray"])
+    (d0 - _CL_EXT, d0 + _e + _ct, -T - 0.025, -T - _e, _UZ + _e, dz1 + CAS), (d1 - _e - _ct, d1 + CAS, -T - 0.025, -T - _e, _UZ + _e, dz1 + CAS),
+    (d0 + _e + _ct, d1 - _e - _ct, -T - 0.025, -T - _e, dz1 - _e - _ct, dz1 + CAS),
+    (d0 + _e, d0 + _e + _ct, -T + _e, -_e, _UZ + _e, dz1 - _e), (d1 - _e - _ct, d1 - _e, -T + _e, -_e, _UZ + _e, dz1 - _e),
+    (d0 + _e + _ct, d1 - _e - _ct, -T + _e, -_e, dz1 - _e - _ct, dz1 - _e),
+    (d0 - _CL_INT, d0 + _e + _ct, _e, _e + 0.012, dz0, dz1 + _CI), (d1 - _e - _ct, d1 + _CI, _e, _e + 0.012, dz0, dz1 + _CI),   # marco interior
+    (d0 + _e + _ct, d1 - _e - _ct, _e, _e + 0.012, dz1 - _e - _ct, dz1 + _CI)], [M["trim"]])
+box("Umbral", d0 + _e, d1 - _e, -T - 0.04, -_e, 0.0, _UZ, M["gray"])
 
 # --- puerta de entrada: amarilla afuera, negra (pizarrón) adentro; bisagra a la IZQUIERDA visto desde afuera
 #     (x = d0) y abre hacia adentro (f0007, f0010, f0012).
-bm = bmesh.new(); pv = (d0 + 0.012, -0.02, 0.0)
-add_box(bm, d0 + 0.015, d1 - 0.015, -0.065, -0.02, 0.012, dz1 - 0.005, pivot=pv)
+bm = bmesh.new(); pv = (d0 + 0.018, -0.02, 0.0)   # bisagra justo delante de la jamba: abierta a 92° libra el contramarco
+add_box(bm, d0 + 0.019, d1 - 0.019, -0.065, -0.02, _UZ + 0.003, dz1 - _e - _ct - 0.003, pivot=pv)
 bm.normal_update()
 for f in bm.faces:
     f.material_index = 1 if f.normal.y > 0.5 else 0
@@ -37,7 +44,7 @@ add_box(bm, hx - 0.025, hx + 0.025, -0.09, -0.065, 0.95, 1.00, pivot=pv, mi=2)  
 add_box(bm, hx - 0.02, hx + 0.02, -0.08, -0.065, 1.10, 1.14, pivot=pv, mi=2)       # cerradura
 add_box(bm, hx - 0.10, hx + 0.02, -0.02, 0.0, 0.96, 0.99, pivot=pv, mi=3)          # manija interior negra
 door = make_obj("Puerta entrada", bm, [PL["yellow"], M["chalk"], M["steel"], M["blackmetal"]], pv)
-interactive(door, "rot", "Puerta de entrada", axis="Z", angle=95)
+interactive(door, "rot", "Puerta de entrada", axis="Z", angle=92)
 
 # --- puerta mosquitero blanca (storm door): bisagra izquierda, abre hacia afuera; dos vidrios + zócalo ciego
 #     (f0001/f0004: vidrio superior 1.39–2.11 m, travesaño, vidrio inferior 0.59–1.33 m, zócalo hasta 0.59 m).
@@ -62,7 +69,7 @@ box("Felpudo", dcx - 0.40, dcx + 0.40, -T - 0.60, -T - 0.06, _deck_z, _deck_z + 
 
 # --- faroles: farol caja negro con vidrio esmerilado a la derecha de la puerta + luz solar con sensor
 #     centrada sobre la puerta, apoyada en la tapajunta horizontal (f0004, f0005, f0007).
-fx, fz, fy = d1 + CAS + 0.20, dz1 + CAS + 0.02, -T
+fx, fz, fy = d1 + CAS + 0.20, min(dz1 + CAS + 0.02, _belt_z - 0.03 - 0.035 - 0.12 - 0.005), -T - 0.001   # bajo la tapajunta
 _lw2, _lh = 0.075, 0.12                         # farol ≈ 0.15 × 0.24 m (f0007)
 _fr = [(fx - 0.05, fx + 0.05, fy - 0.015, fy, fz - _lh - 0.04, fz + _lh + 0.02),                    # placa
        (fx - _lw2 - 0.01, fx + _lw2 + 0.01, fy - 0.15, fy - 0.015, fz + _lh, fz + _lh + 0.035),       # sombrerete
@@ -73,7 +80,9 @@ _fr.append((fx - _lw2, fx + _lw2, fy - 0.14, fy - 0.128, fz - 0.005, fz + 0.005)
 for xs in (fx - _lw2, fx + _lw2 - 0.012):
     _fr.append((xs, xs + 0.012, fy - 0.14, fy - 0.015, fz - _lh, fz + _lh))  # cantos laterales
 multi("Farol 0", _fr, [M["blackmetal"]])
-box("Farol vidrio 0", fx - _lw2 + 0.008, fx + _lw2 - 0.008, fy - 0.132, fy - 0.02, fz - _lh, fz + _lh, PL["frost"])
+# vidrio dentro de la caja, a tope contra parantes/cantos/base/sombrerete (1–2 mm de luz)
+multi("Farol vidrio 0", [(fx - _lw2 + 0.013, fx - 0.006, fy - 0.126, fy - 0.017, fz - _lh + 0.002, fz + _lh - 0.002, 0),
+                         (fx + 0.006, fx + _lw2 - 0.013, fy - 0.126, fy - 0.017, fz - _lh + 0.002, fz + _lh - 0.002, 0)], [PL["frost"]])
 multi("Farol 1", [(dcx - 0.08, dcx + 0.08, -T - _clad - 0.07, -T - _clad, _belt_z + 0.03, _belt_z + 0.15),
                   (dcx - 0.085, dcx + 0.085, -T - _clad - 0.09, -T - _clad - 0.005, _belt_z + 0.15, _belt_z + 0.165)],
       [PL["sensor"]])
@@ -115,14 +124,14 @@ for k in range(6):
     rod(bm, p_hub, p_el, 0.006); rod(bm, p_el, p_out, 0.006); rod(bm, p_out, p_up, 0.006)
     rod(bm, (p_up[0], p_up[1], p_up[2] - 0.01), (p_up[0], p_up[1], p_up[2] + 0.05), 0.014, seg=8)   # portavela
     tips.append((p_up[0], p_up[1], p_up[2] + 0.085))
-bm.normal_update()
-make_obj("Araña", bm, [M["blackmetal"]], (0, 0, 0), 1.0)
-bm = bmesh.new()
+# lamparitas globo (2º material del mismo objeto): apoyan en el portavela, base 3 mm sobre su borde
 for (x, y, z) in tips:
     r_ = bmesh.ops.create_uvsphere(bm, u_segments=8, v_segments=6, radius=0.032)
-    bmesh.ops.translate(bm, verts=r_["verts"], vec=(x, y, z))
+    bmesh.ops.translate(bm, verts=r_["verts"], vec=(x, y, z - 0.085 + 0.05 + 0.003 + 0.032))
+    for f in {f for v in r_["verts"] for f in v.link_faces}:
+        f.material_index = 1
 bm.normal_update()
-make_obj("Araña lamparitas", bm, [M["bulb"]], (0, 0, 0), 1.0)
+make_obj("Araña", bm, [M["blackmetal"], M["bulb"]], (0, 0, 0), 1.0)
 
 # --- riel con 3 spots negros sobre la ventana grande de la cocina (f0022)
 _lw = globals().get("LEFT_WINS", [(1.20, 2.25, 1.05, 2.05)])

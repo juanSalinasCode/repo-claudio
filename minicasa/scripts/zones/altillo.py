@@ -23,14 +23,13 @@ ZA = LF + MH + 0.002                                # cara inferior del acolchad
 AT = 0.05                                           # espesor del acolchado
 AY1 = BY1 - 0.52                                    # deja libre la cabecera para las almohadas
 multi("Acolchado", [(BX0 - 0.03, BX1 + 0.03, BY0 - 0.03, AY1, ZA, ZA + AT, 0),            # sobre el colchón
-                    (BX0 - 0.03, BX0 - 0.003, BY0 - 0.03, AY1, LF + 0.06, ZA, 0),       # cae a la izquierda
-                    (BX1 + 0.003, BX1 + 0.03, BY0 - 0.03, AY1, LF + 0.06, ZA, 0),       # cae a la derecha
-                    (BX0 - 0.003, BX1 + 0.003, BY0 - 0.03, BY0 - 0.003, LF + 0.06, ZA, 0)],   # cae a los pies
+                    (BX0 - 0.03, BX0 - 0.003, BY0 - 0.03, AY1, LF + 0.155, ZA, 0),      # cae a la izquierda
+                    (BX1 + 0.003, BX1 + 0.03, BY0 - 0.03, AY1, LF + 0.155, ZA, 0),      # cae a la derecha
+                    (BX0 - 0.003, BX1 + 0.003, BY0 - 0.03, BY0 - 0.003, max(LF + 0.155, _vg[5] + 0.003), ZA, 0)],   # pies (sobre la cenefa)
       [M_duvet])
-# acolchado más ancho que el colchón: no entra entre la pared XL y el colchón → recortado a 1 cm de la pared
 ZT = ZA + AT + 0.003                                # base del edredón y de la manta
 # edredón tostado amontonado: tres bultos suaves (elipsoides) con huellas que no se pisan
-for k, (cx, cy, sx, sy, h) in enumerate(((0.45, 0.60, 0.55, 0.62, 0.16), (0.95, 0.80, 0.42, 0.50, 0.20), (0.62, 1.12, 0.48, 0.24, 0.12))):
+for k, (cx, cy, sx, sy, h) in enumerate(((0.45, 0.60, 0.55, 0.62, 0.16), (0.95, 0.80, 0.42, 0.50, 0.20), (0.62, 1.17, 0.48, 0.24, 0.12))):
     sphere(f"Edredon {k}", BX0 + cx, BY0 + cy, ZT + h / 2, 0.5, M_tan, sx=sx, sy=sy, sz=h, seg=12)
 box("Manta altillo", BX0 + 0.05, BX1 - 0.05, BY0 + 0.02, BY0 + 0.26, ZT, ZT + 0.04, M_tan)   # doblada a los pies
 for k in range(2):

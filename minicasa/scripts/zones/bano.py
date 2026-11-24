@@ -236,8 +236,7 @@ multi("Vanitorio", [(VX0, VX1, VY0, VY1, VZ - 0.05, VZ, 0),                     
 # toallas dobladas en el estante inferior
 for k, mt in enumerate((M_twg, M["white"], M_twg)):
     y0 = VY0 + 0.10 + k * 0.28
-    sphere(f"Toalla {k}", (VX0 + VX1) / 2 + 0.01, y0 + 0.12, 0.153 + 0.055 - 0.012 * (k == 1), 0.5, mt,
-           sx=VX1 - VX0 - 0.15, sy=0.24, sz=0.11 - 0.024 * (k == 1), seg=12)      # pila doblada, cantos suaves
+    box(f"Toalla {k}", VX0 + 0.08, VX1 - 0.06, y0, y0 + 0.24, 0.153, 0.27 - 0.03 * (k == 1), mt)   # 3 mm sobre el estante
 # bacha negra rectangular de apoyo + grifería de pared negra (pico + 2 llaves en cruz)
 SYC2 = (BWIN[1][0] - 0.30) if BWIN else (VY0 + VY1) / 2   # bacha bajo el espejo, justo antes de la ventana
 SX = XR - 0.27
@@ -301,14 +300,13 @@ EY0, EY1 = BY + 0.05, min(VY0 - 0.04, BY + 0.50)
 EX0, EX1 = XR - 0.40, XR - 0.03
 if EY1 - EY0 > 0.25:
     parts = [(x, x + 0.025, y, y + 0.025, 0.0, LOFT_Z - 0.20, 0) for x in (EX0, EX1 - 0.025) for y in (EY0, EY1 - 0.025)]
-    for z in (0.10, 0.50, 0.90):
+    for z in (0.10, 0.50, 1.20):
         parts.append((EX0, EX1, EY0, EY1, z, z + 0.02, 0))   # toallas apoyadas encima (z+0.023)
     parts.append((EX0, EX0 + 0.02, EY0, EY1, 1.60, 1.62, 0))      # barra toallero
-    parts.append((EX0, EX1, EY1 - 0.02, EY1, 1.12, 1.14, 0))      # barandita sobre las toallas
+    parts.append((EX0, EX1, EY1 - 0.02, EY1, 0.80, 0.82, 0))      # barandita
     multi("Toallero escalera", parts, [M["blackmetal"]])
-    for k, (z, mt) in enumerate(((0.12, M_tw3), (0.52, M_tw2), (0.92, M_tw1))):
-        sphere(f"Toallas estante {k}", (EX0 + EX1) / 2, (EY0 + EY1) / 2, z + 0.023 + 0.08, 0.5, mt,
-               sx=EX1 - EX0 - 0.08, sy=EY1 - EY0 - 0.08, sz=0.16, seg=12)
+    for k, (z, mt) in enumerate(((0.12, M_tw3), (0.52, M_tw2), (1.22, M_tw1))):
+        box(f"Toallas estante {k}", EX0 + 0.04, EX1 - 0.04, EY0 + 0.04, EY1 - 0.04, z + 0.003, z + 0.16, mt)
 
 # =================================================================== PARED DEL FONDO: ESTANTE DE MADERA
 SHX1 = XR - 0.38
