@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" viewBox="0 0 800 800">
+<defs>
+<linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4efe6"/><stop offset="1" stop-color="#e2d6c3"/></linearGradient>
+<linearGradient id="wood" x1="0" x2="1"><stop offset="0" stop-color="#5a3518"/><stop offset=".35" stop-color="#9a6332"/><stop offset=".6" stop-color="#a86d38"/><stop offset="1" stop-color="#4a2a12"/></linearGradient>
+<linearGradient id="metal" x1="0" x2="1"><stop offset="0" stop-color="#2b2b2b"/><stop offset=".4" stop-color="#7a7a7a"/><stop offset=".6" stop-color="#9a9a9a"/><stop offset="1" stop-color="#222"/></linearGradient>
+<linearGradient id="glass" x1="0" x2="1"><stop offset="0" stop-color="#cfe6ee" stop-opacity=".5"/><stop offset=".5" stop-color="#ffffff" stop-opacity=".85"/><stop offset="1" stop-color="#b9d6e0" stop-opacity=".5"/></linearGradient>
+<pattern id="layers" width="8" height="4" patternUnits="userSpaceOnUse"><rect width="8" height="4" fill="none"/><line x1="0" y1="3.5" x2="8" y2="3.5" stroke="#000" stroke-opacity=".08"/></pattern>
+</defs>
+<rect width="800" height="800" fill="url(#bg)"/>
+<ellipse cx="400" cy="690" rx="230" ry="28" fill="#000" opacity=".15"/>
+<!-- glass -->
+<path d="M300 170 L500 170 L492 250 L308 250 Z" fill="url(#glass)" stroke="#9bbac4" stroke-width="2"/>
+<ellipse cx="400" cy="170" rx="100" ry="16" fill="#e9f5f8" stroke="#9bbac4" stroke-width="2"/>
+<!-- handle -->
+<path d="M555 330 C 660 330, 660 560, 555 560" fill="none" stroke="#3b220e" stroke-width="44" stroke-linecap="round"/>
+<path d="M555 330 C 640 330, 640 560, 555 560" fill="none" stroke="#8a5a2c" stroke-width="24" stroke-linecap="round"/>
+<!-- barrel body -->
+<path d="M265 230 Q240 450 265 670 L535 670 Q560 450 535 230 Z" fill="url(#wood)"/>
+<path d="M265 230 Q240 450 265 670 L535 670 Q560 450 535 230 Z" fill="url(#layers)"/>
+<g stroke="#3a2210" stroke-width="3" opacity=".55">
+<path d="M310 232 Q296 450 310 668" fill="none"/><path d="M355 232 Q350 450 355 668" fill="none"/>
+<path d="M400 232 L400 668"/><path d="M445 232 Q450 450 445 668" fill="none"/><path d="M490 232 Q504 450 490 668" fill="none"/>
+</g>
+<ellipse cx="400" cy="230" rx="135" ry="22" fill="#6b4120" stroke="#3a2210" stroke-width="3"/>
+<ellipse cx="400" cy="230" rx="100" ry="15" fill="#2a1a0c"/>
+<!-- bands -->
+<path d="M258 290 Q400 312 542 290 L544 322 Q400 344 256 322 Z" fill="url(#metal)"/>
+<path d="M256 580 Q400 602 544 580 L542 612 Q400 634 258 612 Z" fill="url(#metal)"/>
+<g fill="#ddd"><circle cx="290" cy="306" r="5"/><circle cx="510" cy="306" r="5"/><circle cx="290" cy="596" r="5"/><circle cx="510" cy="596" r="5"/></g>
+<!-- emblem: skull with straw hat silhouette (original) -->
+<g transform="translate(400 455)">
+<circle r="92" fill="#f1e4c8" stroke="#3a2210" stroke-width="5"/>
+<g fill="#1b1b1b">
+<path d="M-40 -10 a40 40 0 0 1 80 0 v18 q0 14 -14 14 h-6 v14 h-40 v-14 h-6 q-14 0 -14 -14 z"/>
+</g>
+<g fill="#f1e4c8"><circle cx="-16" cy="2" r="10"/><circle cx="16" cy="2" r="10"/><path d="M-4 18 l4 -8 l4 8z"/></g>
+<g stroke="#f1e4c8" stroke-width="3"><line x1="-12" y1="28" x2="-12" y2="36"/><line x1="0" y1="28" x2="0" y2="36"/><line x1="12" y1="28" x2="12" y2="36"/></g>
+<path d="M-62 -30 Q0 -44 62 -30 Q50 -22 34 -26 Q30 -70 0 -70 Q-30 -70 -34 -26 Q-50 -22 -62 -30 Z" fill="#e8b84a" stroke="#7a5512" stroke-width="3"/>
+<path d="M-33 -34 Q0 -42 33 -34 L32 -27 Q0 -34 -32 -27 Z" fill="#c0392b"/>
+<g stroke="#1b1b1b" stroke-width="12" stroke-linecap="round"><line x1="-62" y1="40" x2="62" y2="72"/><line x1="62" y1="40" x2="-62" y2="72"/></g>
+</g>
+<!-- label -->
+<text x="400" y="760" font-family="Georgia, serif" font-size="30" text-anchor="middle" fill="#4a2a12">Funda Barril Pirata · PLA + vaso de vidrio</text>
+<text x="400" y="60" font-family="Georgia, serif" font-size="40" font-weight="bold" text-anchor="middle" fill="#3a2210">Concepto 1</text>
+</svg>
