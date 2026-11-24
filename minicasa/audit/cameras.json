@@ -1,0 +1,444 @@
+[
+ {
+  "name": "entrada1",
+  "frame": "/opt/3d/minicasa/colmap/images/f0012.jpg",
+  "loc": [
+   0.2912,
+   -0.3735,
+   1.4885
+  ],
+  "quat": [
+   0.722899,
+   0.690813,
+   -0.012104,
+   -0.006866
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "entrada2",
+  "frame": "/opt/3d/minicasa/colmap/images/f0013.jpg",
+  "loc": [
+   0.3345,
+   0.077,
+   1.4908
+  ],
+  "quat": [
+   0.733602,
+   0.679517,
+   -0.008542,
+   -0.00344
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "entrada3",
+  "frame": "/opt/3d/minicasa/colmap/images/f0014.jpg",
+  "loc": [
+   0.4371,
+   0.6368,
+   1.4316
+  ],
+  "quat": [
+   0.747973,
+   0.663708,
+   -0.005365,
+   0.000588
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "cocina1",
+  "frame": "/opt/3d/minicasa/colmap/images/f0024.jpg",
+  "loc": [
+   0.0746,
+   2.8602,
+   1.3614
+  ],
+  "quat": [
+   0.033393,
+   0.037856,
+   0.689969,
+   0.722076
+  ],
+  "fov_h": 62.114,
+  "model": "m2"
+ },
+ {
+  "name": "cocina2",
+  "frame": "/opt/3d/minicasa/colmap/images/f0034.jpg",
+  "loc": [
+   0.2762,
+   2.4698,
+   1.2274
+  ],
+  "quat": [
+   0.131283,
+   0.091923,
+   0.547668,
+   0.821203
+  ],
+  "fov_h": 62.114,
+  "model": "m2"
+ },
+ {
+  "name": "cocina3",
+  "frame": "/opt/3d/minicasa/colmap/images/f0050.jpg",
+  "loc": [
+   0.1486,
+   2.4042,
+   1.4896
+  ],
+  "quat": [
+   0.01976,
+   0.023306,
+   0.674152,
+   0.737961
+  ],
+  "fov_h": 62.114,
+  "model": "m2"
+ },
+ {
+  "name": "cocina4",
+  "frame": "/opt/3d/minicasa/colmap/images/f0062.jpg",
+  "loc": [
+   -0.0879,
+   2.5829,
+   1.3239
+  ],
+  "quat": [
+   0.139237,
+   0.117602,
+   0.62793,
+   0.756629
+  ],
+  "fov_h": 62.114,
+  "model": "m2"
+ },
+ {
+  "name": "cocina5",
+  "frame": "/opt/3d/minicasa/colmap/images/f0087.jpg",
+  "loc": [
+   0.2604,
+   2.9773,
+   1.4269
+  ],
+  "quat": [
+   0.04714,
+   0.053301,
+   0.695473,
+   0.71502
+  ],
+  "fov_h": 62.114,
+  "model": "m2"
+ },
+ {
+  "name": "heladera1",
+  "frame": "/opt/3d/minicasa/colmap/images/f0096.jpg",
+  "loc": [
+   0.2453,
+   1.3482,
+   1.4709
+  ],
+  "quat": [
+   0.791675,
+   0.597579,
+   0.071945,
+   0.104759
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "heladera2",
+  "frame": "/opt/3d/minicasa/colmap/images/f0100.jpg",
+  "loc": [
+   0.2492,
+   1.5896,
+   1.2372
+  ],
+  "quat": [
+   0.81117,
+   0.551819,
+   0.104758,
+   0.162861
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "living1",
+  "frame": "/opt/3d/minicasa/colmap/images/f0091.jpg",
+  "loc": [
+   0.3404,
+   1.9178,
+   1.3882
+  ],
+  "quat": [
+   -0.488028,
+   -0.449888,
+   0.520187,
+   0.537434
+  ],
+  "fov_h": 62.114,
+  "model": "m2"
+ },
+ {
+  "name": "living2",
+  "frame": "/opt/3d/minicasa/colmap/images/f0104.jpg",
+  "loc": [
+   0.0851,
+   1.7338,
+   1.3253
+  ],
+  "quat": [
+   0.817355,
+   0.566447,
+   -0.0608,
+   -0.085861
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "living3",
+  "frame": "/opt/3d/minicasa/colmap/images/f0110.jpg",
+  "loc": [
+   -0.059,
+   1.8843,
+   1.2863
+  ],
+  "quat": [
+   0.785638,
+   0.611525,
+   -0.061365,
+   -0.071028
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "granero1",
+  "frame": "/opt/3d/minicasa/colmap/images/f0016.jpg",
+  "loc": [
+   0.3217,
+   1.8742,
+   1.438
+  ],
+  "quat": [
+   0.769128,
+   0.639075,
+   -0.002115,
+   0.004609
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "granero2",
+  "frame": "/opt/3d/minicasa/colmap/images/f0127.jpg",
+  "loc": [
+   0.248,
+   1.901,
+   1.4462
+  ],
+  "quat": [
+   0.778163,
+   0.627565,
+   0.01234,
+   0.021701
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "granero3",
+  "frame": "/opt/3d/minicasa/colmap/images/f0171.jpg",
+  "loc": [
+   -0.024,
+   2.0839,
+   1.3808
+  ],
+  "quat": [
+   0.762224,
+   0.643091,
+   -0.04876,
+   -0.055415
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "bano1",
+  "frame": "/opt/3d/minicasa/colmap/images/f0137.jpg",
+  "loc": [
+   0.255,
+   3.7279,
+   1.2966
+  ],
+  "quat": [
+   0.74173,
+   0.568526,
+   0.20586,
+   0.290236
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "bano2",
+  "frame": "/opt/3d/minicasa/colmap/images/f0144.jpg",
+  "loc": [
+   -0.0558,
+   4.1857,
+   1.3944
+  ],
+  "quat": [
+   0.722644,
+   0.59774,
+   -0.219109,
+   -0.269227
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "bano3",
+  "frame": "/opt/3d/minicasa/colmap/images/f0158.jpg",
+  "loc": [
+   0.0842,
+   4.1484,
+   1.5023
+  ],
+  "quat": [
+   0.664126,
+   0.663681,
+   0.231013,
+   0.255141
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "bano4",
+  "frame": "/opt/3d/minicasa/colmap/images/f0165.jpg",
+  "loc": [
+   0.0537,
+   3.8033,
+   1.5633
+  ],
+  "quat": [
+   0.763147,
+   0.646137,
+   0.001154,
+   0.010616
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "escalera1",
+  "frame": "/opt/3d/minicasa/colmap/images/f0180.jpg",
+  "loc": [
+   0.0603,
+   1.4106,
+   1.427
+  ],
+  "quat": [
+   0.746363,
+   0.607957,
+   -0.169246,
+   -0.211392
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "escalera2",
+  "frame": "/opt/3d/minicasa/colmap/images/f0187.jpg",
+  "loc": [
+   -0.0263,
+   1.3552,
+   1.4168
+  ],
+  "quat": [
+   0.796429,
+   0.574083,
+   -0.11007,
+   -0.154965
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "escalera3",
+  "frame": "/opt/3d/minicasa/colmap/images/f0198.jpg",
+  "loc": [
+   0.2533,
+   1.0823,
+   1.7015
+  ],
+  "quat": [
+   0.65084,
+   0.757498,
+   -0.040607,
+   -0.030909
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "altillo1",
+  "frame": "/opt/3d/minicasa/colmap/images/f0205.jpg",
+  "loc": [
+   0.6876,
+   2.4251,
+   2.2293
+  ],
+  "quat": [
+   0.65234,
+   0.756872,
+   0.027222,
+   0.029254
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "altillo2",
+  "frame": "/opt/3d/minicasa/colmap/images/f0209.jpg",
+  "loc": [
+   0.5122,
+   3.1026,
+   2.7795
+  ],
+  "quat": [
+   0.676604,
+   0.728623,
+   0.074344,
+   0.076074
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ },
+ {
+  "name": "altillo3",
+  "frame": "/opt/3d/minicasa/colmap/images/f0213.jpg",
+  "loc": [
+   0.5031,
+   3.4064,
+   2.9071
+  ],
+  "quat": [
+   0.689489,
+   0.689044,
+   0.151623,
+   0.163808
+  ],
+  "fov_h": 62.194,
+  "model": "m1"
+ }
+]

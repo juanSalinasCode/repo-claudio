@@ -17,14 +17,14 @@ TEX = os.path.join(ROOT, "tex")
 OUT = os.path.join(ROOT, "out")
 
 # ----------------------------------------------------------------- medidas
-W = 2.40          # ancho interior
-L = 6.00          # largo interior
-T = 0.12          # espesor de pared
-EAVE = 2.45       # altura de pared lateral (interior)
-RIDGE = 3.60      # altura de la cumbrera (interior)
-GROUND = -0.50    # nivel del terreno
-BATH_Y = 4.40     # tabique del baño
-LOFT_Z = 2.10     # piso del altillo (= cielorraso del baño)
+W = 2.00          # ancho interior (COLMAP, escala por puerta 2,03 m; ±3 %; ver audit/medidas.md)
+L = 5.79          # largo interior (cara int. pared frontal y=0 -> cara int. pared trasera)
+T = 0.12          # espesor de pared (estimado desde el exterior)
+EAVE = 3.12       # altura interior de paredes = cielorraso plano (no hay cumbrera interior)
+RIDGE = 3.12      # techo casi plano: el cielorraso es plano a EAVE; RIDGE solo fija la chapa exterior
+GROUND = -0.50    # nivel del terreno (deck ~2 escalones bajo el umbral)
+BATH_Y = 3.94     # tabique del baño: cara del lado baño (cara living = BATH_Y - 0.08 = 3.86)
+LOFT_Z = 2.32     # cielorraso del baño = cara inferior del piso del altillo (piso terminado ≈ 2.40)
 XL, XR = -W / 2, W / 2
 
 bpy.ops.wm.read_factory_settings(use_empty=True)

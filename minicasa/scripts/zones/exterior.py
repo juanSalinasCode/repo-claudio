@@ -12,17 +12,17 @@ Y0, Y1 = -T, L + T                      # caras exteriores de frente y fondo
 # Techo: visto de frente es un PRISMA RECTO de techo casi plano (no se ve hastial triangular). Fachada medida
 # en f0001/f0004: alto (deck→borde superior de la cenefa) ≈ 1.40 × ancho exterior.  El techo queda apenas por
 # encima de la cumbrera interior para no atravesar el cielorraso.
-ROOF_TOP = RIDGE + 0.14                 # borde superior de la cenefa (z desde el piso interior)
+ROOF_TOP = max(RIDGE, EAVE) + 0.25      # borde superior de la cenefa (f0001: ≈3.4 m sobre el deck con escala de puerta)
 FASCIA_H = 0.24                         # cenefa negra
 ROOF_OV = 0.13                          # alero (frente y lados ≈ 0.12–0.16 m en f0004)
 ROOF_FALL = 0.04                        # caída hacia el fondo (inferido: no se ve)
 CLAD = 0.02                             # el revestimiento superior sobresale 2 cm: arma la "junta" horizontal
-BELT_Z = EAVE                           # junta/botaguas horizontal (f0004: ≈ 2.5 m sobre el deck)
+BELT_Z = ROOF_TOP - 1.05                # junta/botaguas horizontal (f0004/f0007: 0.22 m sobre el contramarco de la puerta)
 EXT_DECK_Z = -0.04                      # superficie del deck (un poco más baja que el umbral)
-EXT_DECK_D = 1.85                       # profundidad del deck (fuga en f0001, cámara ~12 m, HFOV ~43°)
-STEP_D = 0.38                           # huella de los 2 escalones (f0001: 0.43 / 0.34 m)
+EXT_DECK_D = 1.20                       # profundidad del deck (fuga en f0001 con HFOV 62° de cameras.json → cámara a ~7.7 m)
+STEP_D = 0.27                           # huella de los 2 escalones (f0001: 0.28 / 0.22 m)
 GRAVEL_M = 0.45                         # franja de ripio alrededor (más allá de las paredes)
-GRAVEL_FRONT = Y0 - EXT_DECK_D - 2 * STEP_D - 0.45     # ≈ 3.1 m delante de la fachada
+GRAVEL_FRONT = Y0 - EXT_DECK_D - 2 * STEP_D - 0.25     # ≈ 2.0 m delante de la fachada
 
 # --- materiales propios (colores lineales muestreados de los fotogramas)
 _sid = M["siding"]                       # revestimiento board-and-batten gris carbón real (recorte de f0005)
@@ -84,21 +84,24 @@ multi("Losetas senda", [(X1 + GRAVEL_M + 0.25 + i * 0.68, X1 + GRAVEL_M + 0.85 +
 zc1 = ROOF_TOP - FASCIA_H + 0.02
 multi("Revestimiento superior", [
     (X0 - CLAD, X1 + CLAD, Y0 - CLAD, Y0, BELT_Z, zc1),            # frente
-    (X0 - CLAD, X1 + CLAD, Y1, Y1 + CLAD, BELT_Z, zc1),            # fondo
     (X0 - CLAD, X0, Y0, Y1, BELT_Z, zc1),                          # izquierda
     (X1, X1 + CLAD, Y0, Y1, BELT_Z, zc1)], [M["siding"]])           # derecha
 bz = (BELT_Z - 0.03, BELT_Z + 0.02)
 multi("Tapajunta", [(X0 - CLAD - 0.012, X1 + CLAD + 0.012, Y0 - CLAD - 0.012, Y0, *bz),
-                    (X0 - CLAD - 0.012, X1 + CLAD + 0.012, Y1, Y1 + CLAD + 0.012, *bz),
+                    (X0 - CLAD - 0.012, X1 + CLAD + 0.012, Y1, Y1 + 0.012, *bz),
                     (X0 - CLAD - 0.012, X0, Y0, Y1, *bz), (X1, X1 + CLAD + 0.012, Y0, Y1, *bz)], [EM["fascia"]])
 # esquineros (los cantos del revestimiento se ven como tablas verticales)
 multi("Esquineros", [(x - 0.01, x + 0.01, y - 0.01, y + 0.01, -0.02, zc1)
                      for x in (X0 - 0.005, X1 + 0.005) for y in (Y0 - 0.005, Y1 + 0.005)], [M["siding"]])
 rx0, rx1, ry0, ry1 = X0 - ROOF_OV, X1 + ROOF_OV, Y0 - ROOF_OV, Y1 + ROOF_OV
 zt0, zt1 = ROOF_TOP, ROOF_TOP - ROOF_FALL
+zb = max(EAVE, RIDGE) + 0.05             # la losa del techo queda siempre por encima del cielorraso interior
 hull("Techo", [(rx0, ry0, zt0), (rx1, ry0, zt0), (rx0, ry1, zt1), (rx1, ry1, zt1),
-               (rx0, ry0, zt0 - FASCIA_H), (rx1, ry0, zt0 - FASCIA_H), (rx0, ry1, zt1 - FASCIA_H), (rx1, ry1, zt1 - FASCIA_H)],
+               (rx0, ry0, zb), (rx1, ry0, zb), (rx0, ry1, zb), (rx1, ry1, zb)],
      [EM["fascia"], EM["membrane"]], mi_fn=lambda n: 1 if n.z > 0.5 else 0)
+fz0 = ROOF_TOP - FASCIA_H                  # cenefa negra perimetral (por fuera de las paredes)
+multi("Cenefa", [(rx0, rx1, ry0, Y0 - CLAD, fz0, zb), (rx0, rx1, Y1 + CLAD, ry1, fz0, zb),
+                 (rx0, X0 - CLAD, ry0, ry1, fz0, zb), (X1 + CLAD, rx1, ry0, ry1, fz0, zb)], [EM["fascia"]])
 
 # --------------------------------------------------------------- parrilla (plancha negra con carro, f0003)
 gxc, gyc, gz = X0 - 1.25, Y0 + 0.10, GROUND

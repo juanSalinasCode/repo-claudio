@@ -53,14 +53,14 @@ CZ = 0.91                       # altura de la mesada terminada
 CT = 0.04                       # espesor de la mesada (tabla maciza)
 TOE = 0.09                      # zócalo
 KY0 = 0.33                      # hueco de escoba entre la pared del frente y el mueble (f0034)
-# módulos desde el frente: cajonera de 3 (la que abre el presentador), puerta doble bajo la bacha, cajonera de 3
+# módulos desde el frente: cajonera de 3 (la que abre el presentador), puerta(s), puerta doble bajo la bacha,
+# cajonera trasera de 3. La bacha va bajo la mitad delantera de la ventana grande (canilla junto al marco, f0066).
+SINK_Y = SINK_WIN[0] + 0.32
 MOD_A = 0.45
-MOD_B = 0.80
-MOD_C = 0.55
 YA1 = KY0 + MOD_A
-YB1 = YA1 + MOD_B
-KY1 = YB1 + MOD_C
-SINK_Y = (YA1 + YB1) / 2        # bacha centrada sobre la puerta doble
+YB0 = SINK_Y - 0.40             # puerta doble bajo la bacha
+YB1 = SINK_Y + 0.40
+KY1 = YB1 + 0.55
 FX = XL + CD                    # plano de los frentes
 CY_CTR = XL + CD / 2
 
@@ -105,8 +105,16 @@ for i, (z0, z1) in enumerate(dz):
 
 # frentes fijos: puerta doble bajo la bacha + cajonera trasera de 3 cajones iguales
 parts = []
-ym = (YA1 + YB1) / 2
-parts += [(FX - 0.02, FX, YA1 + G, ym - G, FZ0, FZ1, 0), (FX - 0.02, FX, ym + G, YB1 - G, FZ0, FZ1, 0)]
+if YB0 - YA1 > 0.08:            # puerta(s) entre la cajonera y la bacha
+    nd = 2 if YB0 - YA1 > 0.55 else 1
+    wd = (YB0 - YA1) / nd
+    for k in range(nd):
+        parts.append((FX - 0.02, FX, YA1 + k * wd + G, YA1 + (k + 1) * wd - G, FZ0, FZ1, 0))
+        pull_v(parts, FX, YA1 + (k + 1) * wd - 0.04 if k == nd - 1 and nd == 1 else YA1 + wd + (0.04 if k else -0.04), FZ1 - 0.13, 0.12)
+else:
+    YB0 = YA1
+ym = (YB0 + YB1) / 2
+parts += [(FX - 0.02, FX, YB0 + G, ym - G, FZ0, FZ1, 0), (FX - 0.02, FX, ym + G, YB1 - G, FZ0, FZ1, 0)]
 pull_v(parts, FX, ym - 0.04, FZ1 - 0.13, 0.12)
 pull_v(parts, FX, ym + 0.04, FZ1 - 0.13, 0.12)
 hz = (FZ1 - FZ0) / 3
@@ -287,8 +295,8 @@ cyl("Florero", XR - 0.07, RW_SMALL[0] + 0.05, RW_SMALL[2] - 0.05, RW_SMALL[2] + 
 RW_BIG = [w for w in RIGHT_WINS if w[0] > RW_SMALL[1]][0]
 box("Cartel LIFE", XR - 0.10, XR - 0.09, RW_BIG[0] + 0.12, RW_BIG[0] + 0.40, RW_BIG[2] - 0.05, RW_BIG[2] + 0.30, MC["life"])
 # estante alto sobre la entrada (pared derecha, bajo el alero)
-box("Estante alto entrada", XR - 0.34, XR, 0.0, SY0 + 0.20, 2.10, 2.13, MC["wood"], tile=0.6)
-box("Estante alto frente", XR - 0.36, XR - 0.34, 0.0, SY0 + 0.20, 2.10, 2.22, MC["wood"], tile=0.6)
+box("Estante alto entrada", XR - 0.34, XR, 0.0, SY0 + 0.20, 2.10, 2.13, M["plywood"], tile=1.0)
+box("Estante alto frente", XR - 0.36, XR - 0.34, 0.0, SY0 + 0.20, 2.10, 2.22, M["plywood"], tile=1.0)
 
 # letrero de letras (negro) sobre la heladera, contra la pared izquierda (f0094); la heladera es de la zona living
 box("Pizarra menu", XL + 0.02, XL + 0.05, KY1 + 0.08, KY1 + 0.40, 1.60, 1.96, MC["letrero"])

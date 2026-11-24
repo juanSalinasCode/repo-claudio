@@ -81,10 +81,11 @@ box("Farol 1 sensor", dcx - 0.06, dcx + 0.06, -T - _clad - 0.075, -T - _clad - 0
 
 # --- araña negra (f0013–f0016): florón, cable largo, columna central y 6 brazos que salen de abajo,
 #     van hacia afuera casi horizontales y suben en vertical hasta un portavela con lamparita globo.
-CHY = 2.30
+CHY = 2.90                       # cámaras entrada2/entrada3 (f0013/f0014): brazos a y≈2.9, x≈0
 CH_ARM_Z = 2.22                  # nivel de los brazos
 CH_R = 0.27                      # radio de los brazos
-CH_TOP = CH_ARM_Z + 0.36         # tope de la columna central
+CH_TOP = CH_ARM_Z + 0.42         # tope de la columna central
+CH_CEIL = globals().get("CEIL_Z", RIDGE)   # cielorraso sobre la araña (las cámaras sugieren ≈3.3 m)
 
 def rod(bm, p0, p1, r, seg=6, mi=0):
     p0, p1 = Vector(p0), Vector(p1)
@@ -98,8 +99,8 @@ def rod(bm, p0, p1, r, seg=6, mi=0):
             f.material_index = mi
 
 bm = bmesh.new()
-rod(bm, (0, CHY, RIDGE - 0.035), (0, CHY, RIDGE + 0.005), 0.06, seg=12)        # florón
-rod(bm, (0, CHY, CH_TOP), (0, CHY, RIDGE - 0.03), 0.005, seg=4)                # cable
+rod(bm, (0, CHY, CH_CEIL - 0.035), (0, CHY, CH_CEIL + 0.005), 0.06, seg=12)        # florón
+rod(bm, (0, CHY, CH_TOP), (0, CHY, CH_CEIL - 0.03), 0.005, seg=4)                # cable
 rod(bm, (0, CHY, CH_ARM_Z - 0.02), (0, CHY, CH_TOP), 0.012, seg=8)             # columna
 rod(bm, (0, CHY, CH_ARM_Z + 0.08), (0, CHY, CH_ARM_Z + 0.16), 0.022, seg=8)    # anillo
 rod(bm, (0, CHY, CH_TOP - 0.04), (0, CHY, CH_TOP), 0.02, seg=8)                # remate
@@ -110,7 +111,7 @@ for k in range(6):
     p_hub = (0.015 * ca, CHY + 0.015 * sa, CH_ARM_Z + 0.06)
     p_el = (0.09 * ca, CHY + 0.09 * sa, CH_ARM_Z)
     p_out = (CH_R * ca, CHY + CH_R * sa, CH_ARM_Z)
-    p_up = (CH_R * ca, CHY + CH_R * sa, CH_ARM_Z + 0.15)
+    p_up = (CH_R * ca, CHY + CH_R * sa, CH_ARM_Z + 0.24)
     rod(bm, p_hub, p_el, 0.006); rod(bm, p_el, p_out, 0.006); rod(bm, p_out, p_up, 0.006)
     rod(bm, (p_up[0], p_up[1], p_up[2] - 0.01), (p_up[0], p_up[1], p_up[2] + 0.05), 0.014, seg=8)   # portavela
     tips.append((p_up[0], p_up[1], p_up[2] + 0.085))

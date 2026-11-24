@@ -69,6 +69,12 @@ M_mirror = mat("Espejo", (0.80, 0.84, 0.86), rough=0.02, metal=1.0)
 pb = bpy.data.objects.get("Piso baño")
 if pb:
     pb.data.materials[0] = M_marb
+# paredes del baño: en el video son paneles lisos blancos (el machimbre sólo está en el cielorraso)
+M_wallb = mat("Panel blanco baño", (0.90, 0.90, 0.90), rough=0.4)
+for n_ in ("Baño revest izq", "Baño revest der", "Baño revest fondo"):
+    ob_ = bpy.data.objects.get(n_)
+    if ob_:
+        ob_.data.materials[0] = M_wallb
 
 # referencias de la estructura
 PF = _bb("Tabique baño", (XL, XR, BATH_Y - 0.08, BATH_Y, 0, LOFT_Z))[2]          # cara living del tabique
@@ -192,7 +198,7 @@ cyl("Portarrollo reserva", XL + 0.14, PRY, 0.02, 0.30, 0.06, M["white"], verts=1
 # =================================================================== PARED XR: VANITORIO, ESPEJO, LUCES
 VD = 0.50                       # profundidad del vanitorio (en x)
 VY1 = L - 0.03
-VY0 = max(BY + 0.50, VY1 - 1.00)
+VY0 = max(BY + 0.48, VY1 - 1.30)     # f0144: la mesada va desde el toallero hasta el rincón del fondo
 VX0, VX1 = XR - VD, XR - 0.01
 VZ = 0.83
 lg = 0.06
@@ -207,7 +213,7 @@ for k, mt in enumerate((M_twg, M["white"], M_twg)):
     y0 = VY0 + 0.10 + k * 0.28
     box(f"Toalla {k}", VX0 + 0.08, VX1 - 0.06, y0, y0 + 0.24, 0.15, 0.27 - 0.03 * (k == 1), mt)
 # bacha negra rectangular de apoyo + grifería de pared negra (pico + 2 llaves en cruz)
-SYC2 = (VY0 + VY1) / 2 - 0.05
+SYC2 = (BWIN[1][0] - 0.30) if BWIN else (VY0 + VY1) / 2   # bacha bajo el espejo, justo antes de la ventana
 SX = XR - 0.27
 multi("Bacha negra", [(SX - 0.18, SX + 0.18, SYC2 - 0.24, SYC2 + 0.24, VZ, VZ + 0.015, 0),
                       (SX - 0.18, SX - 0.165, SYC2 - 0.24, SYC2 + 0.24, VZ, VZ + 0.13, 0),
@@ -232,7 +238,7 @@ agua_b["water_of"] = "agua_bano"
 box("Caja pañuelos", VX0 + 0.08, VX0 + 0.20, VY1 - 0.30, VY1 - 0.08, VZ, VZ + 0.10, mat("Caja celeste", (0.62, 0.78, 0.85)))
 for k in range(2):
     cyl(f"Jabonera {k}", XR - 0.08, VY1 - 0.12 - k * 0.09, VZ, VZ + 0.16, 0.028, M["white"], verts=8)
-box("Toallita mesada", VX0 + 0.05, VX0 + 0.25, SYC2 + 0.27, SYC2 + 0.45, VZ, VZ + 0.015, mat("Toallita verde agua", (0.55, 0.85, 0.80)))
+box("Toallita mesada", VX0 + 0.05, VX0 + 0.25, SYC2 + 0.27, min(SYC2 + 0.45, VY1 - 0.32), VZ, VZ + 0.015, mat("Toallita verde agua", (0.55, 0.85, 0.80)))
 # ventana XR del baño: marco interior blanco como en el video (la crea estructura)
 if BWIN:
     WA, WB, WC, WD = BWIN[1]
@@ -247,8 +253,8 @@ else:
     WA, WC, WD = VY1, 1.15, 1.85
     MY1 = VY1 - 0.30
 # espejo grande de marco negro, sobre la mesada, entre la puerta y la ventana
-MY0 = max(BY + 0.25, MY1 - 0.80)
-MZ0, MZ1 = VZ + 0.38, min(VZ + 0.38 + 0.68, LOFT_Z - 0.20)
+MY0 = max(BY + 0.25, MY1 - 0.90)
+MZ0, MZ1 = VZ + 0.33, min(VZ + 0.33 + 0.72, LOFT_Z - 0.18)
 multi("Espejo baño marco", [(XR - 0.03, XR - 0.005, MY0, MY1, MZ0, MZ0 + 0.03, 0), (XR - 0.03, XR - 0.005, MY0, MY1, MZ1 - 0.03, MZ1, 0),
                             (XR - 0.03, XR - 0.005, MY0, MY0 + 0.03, MZ0, MZ1, 0), (XR - 0.03, XR - 0.005, MY1 - 0.03, MY1, MZ0, MZ1, 0)], [M["black"]])
 box("Espejo baño", XR - 0.02, XR - 0.012, MY0 + 0.03, MY1 - 0.03, MZ0 + 0.03, MZ1 - 0.03, M_mirror)

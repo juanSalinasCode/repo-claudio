@@ -58,12 +58,12 @@ def add_cyl(bm, axis, a, b, s0, s1, r, pivot, segs=12, mi=0):
 # ------------------------------------------------------------------ heladera retro (tipo Galanz/Classic)
 # Contra la pared izquierda, pegada al final de la mesada; frente hacia el pasillo (+x).
 _KY1 = globals().get("KY1", BATH_Y - 1.85)
-FW, FD, FH = 0.56, 0.62, 1.45           # ancho (y), profundidad (x), alto
+FW, FD, FH = 0.60, 0.64, 1.47           # ancho (y), profundidad (x), alto
 FX0 = XL + 0.04
 FX1 = FX0 + FD                          # plano de las puertas
 # En el video la heladera está pegada a la mesada y deja ~0.5 m hasta el tabique para guardar mesa y sillas.
-# Si las medidas no cierran, priorizamos el hueco junto al tabique (donde están los interactivos).
-FY0 = max(_KY1 + 0.03, BATH_Y - 0.08 - 0.50 - FW)
+# La auditoría con cámaras (heladera1/2) confirma que va pegada a la mesada: se ancla a KY1.
+FY0 = _KY1 + 0.02
 FY1 = FY0 + FW
 FZ0 = 0.06                              # zócalo
 FZ_D = 0.60                             # división freezer (abajo) / heladera (arriba)
@@ -124,7 +124,7 @@ box("Heladera cartel", FX0 + 0.20, FX0 + 0.34, FY0 - 0.002, FY0, FH - 0.32, FH -
 PY = BATH_Y - 0.08                      # cara del tabique con el mural
 TY = PY - 0.30                          # (constante compartida) zona de guardado de mesa/sillas
 SOX1 = XR - 0.085; SOX0 = SOX1 - 0.78    # sillón (ver abajo)
-SOY1 = PY - 0.06; SOY0 = SOY1 - 1.32
+SOY1 = PY - 0.06; SOY0 = SOY1 - 1.50
 TOP = 0.60                              # tapa cuadrada de listones 60x60
 # mesa abierta: en el pasillo, delante del sillón
 MCX = (FX1 + DT + SOX0) / 2; MCY = (SOY0 + SOY1) / 2 - 0.05; MZ = 0.72
