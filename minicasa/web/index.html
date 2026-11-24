@@ -1,0 +1,365 @@
+<meta charset="utf-8">
+<title>Mini Casa 3D</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;700&family=Inter:wght@400;500;600&display=swap">
+<style>
+/* Una sola pantalla: el visor 3D ocupa todo; controles flotantes sobre la escena (estética "cabaña": negro carbón + amarillo de la puerta) */
+:root{
+  --bg:#141517; --panel:rgba(20,21,23,.78); --fg:#f3f1ec; --muted:#b9b6ae; --accent:#f6c613; --accent-fg:#1a1a1a; --line:rgba(255,255,255,.14);
+  --display:"Archivo", "Inter", system-ui, sans-serif; --body:"Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--fg);font:14px/1.45 var(--body);overflow:hidden;touch-action:none;-webkit-user-select:none;user-select:none}
+#c{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hud{position:fixed;z-index:5;pointer-events:none}
+.top{top:calc(env(safe-area-inset-top,0px) + 12px);left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.brand{background:var(--panel);backdrop-filter:blur(8px);border:1px solid var(--line);border-radius:10px;padding:10px 14px;max-width:min(360px,70vw)}
+.brand h1{font:700 17px/1.1 var(--display);margin:0 0 4px;letter-spacing:.01em;white-space:nowrap}
+.brand h1 span{color:var(--accent)}
+.brand p{margin:0;color:var(--muted);font-size:12.5px}
+.tools{display:flex;flex-wrap:wrap;gap:6px;justify-content:flex-end;pointer-events:auto}
+button{font:600 12.5px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 12px;cursor:pointer;backdrop-filter:blur(8px)}
+button:hover{border-color:var(--accent)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button.on{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+#cross{left:50%;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;border:2px solid rgba(255,255,255,.75);box-shadow:0 0 0 1px rgba(0,0,0,.35);transition:transform .15s,border-color .15s}
+#cross.hit{border-color:var(--accent);transform:scale(1.35)}
+#tip{left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 22px);transform:translateX(-50%);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:8px 14px;font-weight:600;white-space:nowrap;max-width:calc(100vw - 32px);overflow:hidden;text-overflow:ellipsis;opacity:0;transition:opacity .2s}
+#tip.show{opacity:1}
+#tip b{color:var(--accent)}
+#help{left:max(16px,env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 16px);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;color:var(--muted);font-size:12px;max-width:290px}
+#help kbd{font:600 11px var(--body);color:var(--fg);border:1px solid var(--line);border-radius:4px;padding:1px 5px}
+#joy{left:max(24px,env(safe-area-inset-left,0px));bottom:calc(env(safe-area-inset-bottom,0px) + 70px);width:120px;height:120px;border-radius:50%;border:2px solid var(--line);background:rgba(20,21,23,.35);display:none}
+#knob{position:absolute;left:50%;top:50%;width:48px;height:48px;margin:-24px 0 0 -24px;border-radius:50%;background:rgba(246,198,19,.85)}
+#load{position:fixed;inset:0;z-index:10;display:grid;place-content:center;gap:12px;text-align:center;background:var(--bg)}
+#load h2{font:700 22px var(--display);margin:0}
+#bar{width:min(320px,70vw);height:6px;border-radius:3px;background:var(--line);overflow:hidden}
+#bar i{display:block;height:100%;width:0;background:var(--accent);transition:width .2s}
+#load p{margin:0;color:var(--muted)}
+@media (max-width:640px){ #help{display:none} .brand p{display:none} }
+@media (pointer:coarse){ #joy{display:block} #help{display:none} }
+@media (prefers-reduced-motion:reduce){ #cross,#tip{transition:none} }
+</style>
+
+<canvas id="c" aria-label="Escena 3D recorrible de la mini casa"></canvas>
+
+<div class="hud top">
+  <div class="brand">
+    <h1>Mini Casa <span>3D</span></h1>
+    <p>Recorré la casa del video: abrí puertas, cajones, la heladera, desplegá la mesa y la escalera escondida y subí al altillo.</p>
+  </div>
+  <div class="tools">
+    <button id="bEnter" type="button">Ir a la puerta</button>
+    <button id="bInside" type="button">Adentro</button>
+    <button id="bLoft" type="button">Altillo</button>
+    <button id="bLights" type="button" class="on">Luces</button>
+    <button id="bOut" type="button">Exterior</button>
+  </div>
+</div>
+<div id="cross" class="hud"></div>
+<div id="tip" class="hud"></div>
+<div id="help" class="hud"><b style="color:var(--fg)">Controles</b><br><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> o flechas para caminar · arrastrá para mirar · <kbd>clic</kbd> o <kbd>E</kbd> para usar lo que está en el centro · <kbd>Shift</kbd> corre</div>
+<div id="joy" class="hud" style="pointer-events:auto"><div id="knob"></div></div>
+<div id="load"><h2>Mini Casa 3D</h2><div id="bar"><i></i></div><p id="loadmsg">Cargando el modelo…</p></div>
+
+<script type="importmap">
+{ "imports": {
+  "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+  "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+} }
+</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const canvas = document.getElementById('c');
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.82;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0xbfd8e8);
+scene.fog = new THREE.Fog(0xbfd8e8, 18, 45);
+const camera = new THREE.PerspectiveCamera(72, 1, 0.04, 120);
+camera.rotation.order = 'YXZ';
+
+const hemi = new THREE.HemisphereLight(0xeaf4ff, 0x5a4a35, 1.15);
+scene.add(hemi);
+const sun = new THREE.DirectionalLight(0xfff1dc, 1.6);
+sun.position.set(-8, 14, 6);
+scene.add(sun);
+
+function resize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w / h; camera.updateProjectionMatrix();
+}
+window.addEventListener('resize', resize); resize();
+
+// ---------------------------------------------------------------- estado
+const groups = new Map();     // group -> {open, t, items:[...]}
+const waters = new Map();     // group -> [meshes]
+const lights = []; const bulbs = [];
+let lightsOn = true;
+const colliders = [];
+let spawn = new THREE.Vector3(0.55, 0, 4.5), loftSpot = null, downSpot = null;
+let loftTrigger = null;
+const player = { pos: new THREE.Vector3(), yaw: Math.PI, pitch: -0.05, vy: 0, inLoft: false };
+const EYE = 1.6, LOFT_EYE = 0.95, RADIUS = 0.22, STEP = 0.32;
+
+const loader = new GLTFLoader();
+loader.load('minicasa.json', (gltf) => {
+  const root = gltf.scene;
+  scene.add(root);
+  root.traverse((o) => {
+    const u = o.userData || {};
+    if (o.isMesh) {
+      o.frustumCulled = true;
+      const m = o.material;
+      if (m && m.transparent) { m.depthWrite = false; }
+      if (m && m.emissive && m.emissiveIntensity > 0 && m.emissive.getHex() !== 0) bulbs.push(m);
+    }
+    if (u.spawn) spawn.copy(o.getWorldPosition(new THREE.Vector3()));
+    if (u.loft_spot) loftSpot = o.getWorldPosition(new THREE.Vector3());
+    if (u.down_spot) downSpot = o.getWorldPosition(new THREE.Vector3());
+    if (u.light_point) {
+      const p = o.getWorldPosition(new THREE.Vector3());
+      const L = new THREE.PointLight(0xffd9a8, o.name === 'luz_frente' ? 3 : 4, 6, 1.8);
+      L.position.copy(p); scene.add(L); lights.push(L);
+    }
+    if (u.water_of) {
+      if (!waters.has(u.water_of)) waters.set(u.water_of, []);
+      waters.get(u.water_of).push(o); o.visible = false;
+    }
+    if (u.interact) {
+      const g = u.group || o.name;
+      if (!groups.has(g)) groups.set(g, { open: false, t: 0, items: [] });
+      groups.get(g).items.push({ obj: o, kind: u.interact, axis: u.axis, angle: (u.angle || 0) * Math.PI / 180,
+        vec: u.vec ? new THREE.Vector3(...u.vec) : null, baseRot: o.rotation.clone(), basePos: o.position.clone(), visState: u.vis_state });
+      if (u.interact === 'vis') o.visible = u.vis_state === 'closed';
+      if (u.interact === 'loft') { loftTrigger = o; o.traverse(m => { if (m.isMesh) m.material = new THREE.MeshBasicMaterial({ visible: false }); }); }
+    }
+  });
+  root.traverse((o) => { if (o.isMesh && !o.userData.water_of && o !== loftTrigger && !o.name.startsWith('Copa')) colliders.push(o); });
+  goTo('out');
+  document.getElementById('load').hidden = true;
+  setLights(true);
+}, (e) => {
+  if (e.total) document.querySelector('#bar i').style.width = (100 * e.loaded / e.total).toFixed(0) + '%';
+}, (err) => {
+  document.getElementById('loadmsg').textContent = 'No se pudo cargar el modelo (' + (err.message || err) + '). Recargá la página.';
+});
+
+// ---------------------------------------------------------------- interacción
+function findInteractive(o) {
+  while (o) { if (o.userData && o.userData.interact) return o; o = o.parent; }
+  return null;
+}
+function isVisible(o) { while (o) { if (!o.visible) return false; o = o.parent; } return true; }
+
+function toggle(obj) {
+  const u = obj.userData;
+  const g = groups.get(u.group || obj.name);
+  if (u.interact === 'light') { setLights(!lightsOn); return 'Luces ' + (lightsOn ? 'encendidas' : 'apagadas'); }
+  if (u.interact === 'water') {
+    g.open = !g.open;
+    (waters.get(u.group) || []).forEach(w => w.visible = g.open);
+    return g.open ? 'Agua abierta' : 'Agua cerrada';
+  }
+  if (u.interact === 'loft') {
+    const st = groups.get('escalera');
+    if (!player.inLoft && !(st && st.open)) return 'Primero desplegá la escalera escondida (tocá la pared con ranuras)';
+    setLoft(!player.inLoft); return player.inLoft ? 'Estás en el altillo' : 'Bajaste del altillo';
+  }
+  g.open = !g.open;
+  return u.label + (g.open ? ': abierto' : ': cerrado');
+}
+
+function setLoft(on) {
+  player.inLoft = on;
+  if (on && loftSpot) { player.pos.set(loftSpot.x, loftSpot.y, loftSpot.z); player.yaw = 0; player.pitch = -0.25; }
+  if (!on && downSpot) { player.pos.set(downSpot.x, 0, downSpot.z); player.yaw = Math.PI; player.pitch = 0; }
+  player.vy = 0;
+  document.getElementById('bLoft').classList.toggle('on', on);
+}
+
+function setLights(on) {
+  lightsOn = on;
+  lights.forEach(l => l.visible = on);
+  bulbs.forEach(m => m.emissiveIntensity = on ? 1 : 0.02);
+  document.getElementById('bLights').classList.toggle('on', on);
+}
+
+function animateGroups(dt) {
+  for (const g of groups.values()) {
+    const target = g.open ? 1 : 0;
+    if (g.t === target) continue;
+    g.t = THREE.MathUtils.clamp(g.t + (target > g.t ? 1 : -1) * dt / 0.6, 0, 1);
+    const e = g.t * g.t * (3 - 2 * g.t);
+    for (const it of g.items) {
+      const o = it.obj;
+      if (it.kind === 'rot' || it.kind === 'combo') {
+        o.rotation.copy(it.baseRot); o.rotation[it.axis] += it.angle * e;
+      }
+      if ((it.kind === 'slide' || it.kind === 'combo') && it.vec) {
+        o.position.copy(it.basePos).addScaledVector(it.vec, e);
+      }
+      if (it.kind === 'vis') o.visible = (it.visState === 'open') ? e > 0.5 : e <= 0.5;
+    }
+  }
+}
+
+const ray = new THREE.Raycaster();
+const center = new THREE.Vector2(0, 0);
+function pick(ndc) {
+  ray.setFromCamera(ndc || center, camera);
+  ray.far = 3.2;
+  const hits = ray.intersectObjects(colliders.concat(loftTrigger ? [loftTrigger] : []), true);
+  for (const h of hits) {
+    if (!isVisible(h.object) && h.object !== loftTrigger && findInteractive(h.object) !== loftTrigger) continue;
+    return findInteractive(h.object);
+  }
+  return null;
+}
+
+const tip = document.getElementById('tip'), cross = document.getElementById('cross');
+let tipTimer = 0;
+function say(msg, secs = 2.2) { tip.innerHTML = msg; tip.classList.add('show'); tipTimer = secs; }
+
+function use(ndc) {
+  const o = pick(ndc);
+  if (o) say('<b>' + toggle(o) + '</b>');
+}
+
+// ---------------------------------------------------------------- controles
+const keys = new Set();
+addEventListener('keydown', (e) => {
+  keys.add(e.code);
+  if (e.code === 'KeyE' || e.code === 'Space') { use(); e.preventDefault(); }
+});
+addEventListener('keyup', (e) => keys.delete(e.code));
+addEventListener('blur', () => keys.clear());
+
+let drag = null;
+canvas.addEventListener('pointerdown', (e) => {
+  canvas.setPointerCapture(e.pointerId);
+  drag = { id: e.pointerId, x: e.clientX, y: e.clientY, sx: e.clientX, sy: e.clientY, moved: 0 };
+});
+canvas.addEventListener('pointermove', (e) => {
+  if (!drag || drag.id !== e.pointerId) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  drag.x = e.clientX; drag.y = e.clientY; drag.moved += Math.abs(dx) + Math.abs(dy);
+  const k = e.pointerType === 'touch' ? 0.006 : 0.0045;
+  player.yaw -= dx * k; player.pitch = THREE.MathUtils.clamp(player.pitch - dy * k, -1.4, 1.4);
+});
+canvas.addEventListener('pointerup', (e) => {
+  if (drag && drag.id === e.pointerId && drag.moved < 8) {
+    const ndc = new THREE.Vector2((e.clientX / innerWidth) * 2 - 1, -(e.clientY / innerHeight) * 2 + 1);
+    use(ndc);
+  }
+  drag = null;
+});
+
+// joystick táctil
+const joy = document.getElementById('joy'), knob = document.getElementById('knob');
+const stick = { x: 0, y: 0, id: null };
+joy.addEventListener('pointerdown', (e) => { stick.id = e.pointerId; joy.setPointerCapture(e.pointerId); moveStick(e); });
+joy.addEventListener('pointermove', (e) => { if (e.pointerId === stick.id) moveStick(e); });
+const endStick = () => { stick.id = null; stick.x = stick.y = 0; knob.style.transform = ''; };
+joy.addEventListener('pointerup', endStick); joy.addEventListener('pointercancel', endStick);
+function moveStick(e) {
+  const r = joy.getBoundingClientRect();
+  let x = (e.clientX - r.left - r.width / 2) / (r.width / 2), y = (e.clientY - r.top - r.height / 2) / (r.height / 2);
+  const l = Math.hypot(x, y); if (l > 1) { x /= l; y /= l; }
+  stick.x = x; stick.y = y; knob.style.transform = `translate(${x * 36}px, ${y * 36}px)`;
+}
+
+// botones
+function goTo(where) {
+  setLoft(false);
+  if (where === 'out') { player.pos.copy(spawn); player.yaw = 0; player.pitch = 0.02; }
+  if (where === 'door') { player.pos.set(0.55, -0.02, 1.1); player.yaw = 0; player.pitch = 0; }
+  if (where === 'in') { player.pos.set(0.45, 0, -0.6); player.yaw = 0; player.pitch = -0.05; const d = groups.get('Puerta entrada'); if (d) d.open = true; }
+}
+document.getElementById('bOut').onclick = () => goTo('out');
+document.getElementById('bEnter').onclick = () => goTo('door');
+document.getElementById('bInside').onclick = () => goTo('in');
+document.getElementById('bLights').onclick = () => setLights(!lightsOn);
+document.getElementById('bLoft').onclick = () => {
+  if (player.inLoft) { setLoft(false); return; }
+  const st = groups.get('escalera'); if (st) st.open = true;
+  setTimeout(() => setLoft(true), 650);
+};
+
+// ---------------------------------------------------------------- física simple
+const down = new THREE.Raycaster(); down.far = 3;
+const side = new THREE.Raycaster();
+const tmp = new THREE.Vector3(), dir = new THREE.Vector3();
+
+function blocked(from, d, dist) {
+  for (const h of [0.45, 1.2]) {
+    side.set(tmp.set(from.x, from.y + h, from.z), d); side.far = dist + RADIUS;
+    const hit = side.intersectObjects(colliders, false).find(x => isVisible(x.object));
+    if (hit) return true;
+  }
+  return false;
+}
+function groundAt(p) {
+  down.set(tmp.set(p.x, p.y + STEP + 0.05, p.z), new THREE.Vector3(0, -1, 0));
+  const hit = down.intersectObjects(colliders, false).find(x => isVisible(x.object));
+  return hit ? hit.point.y : -5;
+}
+
+function step(dt) {
+  if (player.inLoft) {  // en el altillo: solo mirar y moverse un poco
+    camera.position.set(player.pos.x, player.pos.y + LOFT_EYE, player.pos.z);
+    camera.rotation.set(player.pitch, player.yaw, 0);
+    return;
+  }
+  let fx = 0, fz = 0;
+  if (keys.has('KeyW') || keys.has('ArrowUp')) fz += 1;
+  if (keys.has('KeyS') || keys.has('ArrowDown')) fz -= 1;
+  if (keys.has('KeyA')) fx -= 1;
+  if (keys.has('KeyD')) fx += 1;
+  if (keys.has('ArrowLeft')) player.yaw += 1.8 * dt;
+  if (keys.has('ArrowRight')) player.yaw -= 1.8 * dt;
+  fx += stick.x; fz -= stick.y;
+  const speed = (keys.has('ShiftLeft') || keys.has('ShiftRight')) ? 3.2 : 1.6;
+  const len = Math.hypot(fx, fz);
+  if (len > 0.05) {
+    const s = Math.min(len, 1) * speed * dt / len;
+    const sin = Math.sin(player.yaw), cos = Math.cos(player.yaw);
+    const mx = (fx * cos - fz * sin) * s, mz = (-fx * sin - fz * cos) * s;
+    if (mx && !blocked(player.pos, dir.set(Math.sign(mx), 0, 0), Math.abs(mx))) player.pos.x += mx;
+    if (mz && !blocked(player.pos, dir.set(0, 0, Math.sign(mz)), Math.abs(mz))) player.pos.z += mz;
+  }
+  const gy = groundAt(player.pos);
+  if (gy > player.pos.y - 0.01 && gy - player.pos.y <= STEP + 0.05) { player.pos.y = gy; player.vy = 0; }
+  else { player.vy -= 9.8 * dt; player.pos.y = Math.max(gy, player.pos.y + player.vy * dt); if (player.pos.y === gy) player.vy = 0; }
+  camera.position.set(player.pos.x, player.pos.y + EYE, player.pos.z);
+  camera.rotation.set(player.pitch, player.yaw, 0);
+}
+
+// ---------------------------------------------------------------- loop
+const clock = new THREE.Clock();
+let hoverAcc = 0;
+renderer.setAnimationLoop(() => {
+  const dt = Math.min(clock.getDelta(), 0.05);
+  step(dt);
+  animateGroups(dt);
+  hoverAcc += dt;
+  if (hoverAcc > 0.12 && colliders.length) {
+    hoverAcc = 0;
+    const o = pick();
+    cross.classList.toggle('hit', !!o);
+    if (o && tipTimer <= 0) { tip.innerHTML = (matchMedia('(pointer:coarse)').matches ? 'Tocá: ' : 'Clic / E: ') + '<b>' + o.userData.label + '</b>'; tip.classList.add('show'); }
+    else if (!o && tipTimer <= 0) tip.classList.remove('show');
+  }
+  if (tipTimer > 0) tipTimer -= dt;
+  renderer.render(scene, camera);
+});
+window.__mini = { player, groups, goTo, toggle, setLoft };
+</script>
